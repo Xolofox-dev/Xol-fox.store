@@ -45,6 +45,21 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; 
 
 .footer { background: var(--dark-blue); color: #94a3b8; padding: 40px 5%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; font-size: 12px; line-height: 1.8; margin-top: 60px; }
 .footer strong { color: white; font-size: 14px; display: block; margin-bottom: 10px; }
+.hero-container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    gap: 40px; 
+    flex-direction: row; /* Memaksa teks di kiri dan gambar di kanan pojok */
+}
+
+.hero-image {
+    width: 130px; /* Mengecilkan sedikit ukuran tas agar proporsional */
+    height: 130px;
+    flex-shrink: 0;
+}
 
 .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
 .modal-content { background: white; margin: 10% auto; padding: 25px; width: 90%; max-width: 400px; border-radius: 8px; position: relative; }
