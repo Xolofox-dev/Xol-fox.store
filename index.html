@@ -25,14 +25,20 @@
 
     <!-- Hero Banner Blue Section -->
     <header class="hero-section">
-        <div class="hero-content">
-            <span class="welcome-tag">WELCOME TO XOLOFOX.ID</span>
-            <h1>Temukan Produk<br>Favoritmu</h1>
-            <p>Belanja berbagai produk pilihan dengan kualitas terbaik dan harga yang bersahabat.</p>
-            <button class="btn-shop">Belanja Sekarang →</button>
-        </div>
-        <div class="hero-image">
-            <img src="https://flaticon.com" alt="Shopping Bags" width="180">
+        <div class="hero-container">
+            <div class="hero-content">
+                <span class="welcome-tag">WELCOME TO XOLOFOX.ID</span>
+                <h1>Temukan Produk<br>Favoritmu</h1>
+                <p>Belanja berbagai produk pilihan dengan kualitas terbaik dan harga yang bersahabat.</p>
+                <button class="btn-shop" onclick="document.getElementById('catalog-title').scrollIntoView({behavior: 'smooth'})">Belanja Sekarang →</button>
+            </div>
+            <div class="hero-image">
+                <!-- Menggunakan ilustrasi SVG bawaan agar tidak pecah/rusak lagi -->
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://w3.org">
+                    <path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M16 11V7C16 5.93913 15.5786 4.92172 14.8284 4.17157C14.0783 3.42143 13.0609 3 12 3C10.9391 3 9.92172 3.42143 9.17157 4.17157C8.42143 4.92172 8 5.93913 8 7V11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
         </div>
     </header>
 
@@ -44,36 +50,38 @@
         <div class="feat-item">📞 <span><strong>Customer Support</strong><br><small>Siap Membantu Anda</small></span></div>
     </section>
 
-    <!-- Main Store Section -->
-    <main class="store-container">
-        <h2 class="section-title">Produk Pilihan</h2>
-        <p class="section-subtitle">Temukan produk terbaik untukmu</p>
+    <!-- Main Store & Layout Grid Area -->
+    <div class="main-layout-container">
+        <main class="store-container">
+            <h2 class="section-title" id="catalog-title">Produk Pilihan</h2>
+            <p class="section-subtitle">Temukan produk terbaik untukmu</p>
 
-        <!-- Search and Filter Bar -->
-        <div class="filter-wrapper">
-            <input type="text" id="searchBar" oninput="filterProducts()" placeholder="🔎 Cari produk...">
-            <div class="category-tabs">
-                <button class="tab active" onclick="filterCategory('Semua')">Semua</button>
-                <button class="tab" onclick="filterCategory('Fashion')">Fashion</button>
-                <button class="tab" onclick="filterCategory('Skincare')">Skincare</button>
-                <button class="tab" onclick="filterCategory('Accessories')">Accessories</button>
-                <button class="tab" onclick="filterCategory('Elektronik')">Elektronik</button>
+            <!-- Search and Filter Bar -->
+            <div class="filter-wrapper">
+                <input type="text" id="searchBar" oninput="filterProducts()" placeholder="🔎 Cari produk...">
+                <div class="category-tabs">
+                    <button class="tab active" onclick="filterCategory('Semua')">Semua</button>
+                    <button class="tab" onclick="filterCategory('Fashion')">Fashion</button>
+                    <button class="tab" onclick="filterCategory('Skincare')">Skincare</button>
+                    <button class="tab" onclick="filterCategory('Accessories')">Accessories</button>
+                    <button class="tab" onclick="filterCategory('Elektronik')">Elektronik</button>
+                </div>
             </div>
-        </div>
 
-        <!-- ====== DAFTAR FOTO PRODUK ASLI DI BAWAH PENCARIAN ====== -->
-        <div class="products-grid" id="productsContainer"></div>
-    </main>
+            <!-- Grid Kontainer Produk -->
+            <div class="products-grid" id="productsContainer"></div>
+        </main>
 
-    <!-- Floating Shopping Cart Section -->
-    <section class="cart-section">
-        <h3>🛒 Keranjang Belanja</h3>
-        <div id="cartItems"></div>
-        <div class="cart-total">Total: <strong id="cartTotal">Rp 0</strong></div>
-        <button class="btn-checkout" onclick="openModal('checkoutModal')">Lanjut ke Checkout 🚀</button>
-    </section>
+        <!-- Floating Shopping Cart Section Terintegrasi Samping Katalis -->
+        <aside class="cart-section">
+            <h3>🛒 Keranjang Belanja</h3>
+            <div id="cartItems"></div>
+            <div class="cart-total">Total: <strong id="cartTotal">Rp 0</strong></div>
+            <button class="btn-checkout" onclick="openModal('checkoutModal')">Lanjut ke Checkout 🚀</button>
+        </aside>
+    </div>
 
-    <!-- AUTH MODAL (Login/Register) -->
+    <!-- AUTH MODAL -->
     <div id="authModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('authModal')">&times;</span>
@@ -112,42 +120,12 @@
         <div><strong>Kontak</strong><p>📞 +62 812-3456-7890<br>✉️ info@xolofox.id<br>📍 Indonesia</p></div>
     </footer>
 
-    <!-- Frontend logic dengan data produk statis agar aktif di GitHub Pages -->
     <script>
-        // DATA PRODUK ASLI (Bisa Anda ganti link gambarnya sesuka hati)
         const products = [
-            {
-                id: 1,
-                name: "Kemeja Flanel Premium",
-                price: 150000,
-                category: "Fashion",
-                stock: 20,
-                image: "https://unsplash.com"
-            },
-            {
-                id: 2,
-                name: "Serum Glowing Hydration",
-                price: 85000,
-                category: "Skincare",
-                stock: 15,
-                image: "https://unsplash.com"
-            },
-            {
-                id: 3,
-                name: "Smartwatch Series X",
-                price: 450000,
-                category: "Elektronik",
-                stock: 10,
-                image: "https://unsplash.com"
-            },
-            {
-                id: 4,
-                name: "Kacamata Hitam Anti UV",
-                price: 120000,
-                category: "Accessories",
-                stock: 30,
-                image: "https://unsplash.com"
-            }
+            { id: 1, name: "Kemeja Flanel Premium", price: 150000, category: "Fashion", stock: 20, image: "https://unsplash.com" },
+            { id: 2, name: "Serum Glowing Hydration", price: 85000, category: "Skincare", stock: 15, image: "https://unsplash.com" },
+            { id: 3, name: "Smartwatch Series X", price: 450000, category: "Elektronik", stock: 10, image: "https://unsplash.com" },
+            { id: 4, name: "Kacamata Hitam Anti UV", price: 120000, category: "Accessories", stock: 30, image: "https://unsplash.com" }
         ];
 
         let cart = JSON.parse(localStorage.getItem('xolofox_cart')) || [];
@@ -166,15 +144,21 @@
                 return matchCat && matchSearch;
             });
 
+            if (filtered.length === 0) {
+                container.innerHTML = `<p style="grid-column: 1/-1; color: #64748b; padding: 20px;">Produk tidak ditemukan</p>`;
+                return;
+            }
+
             filtered.forEach(p => {
                 container.innerHTML += `
                     <div class="product-card">
-                        <img src="${p.image}" alt="${p.name}">
+                        <div class="product-img-wrapper">
+                            <img src="${p.image}" alt="${p.name}">
+                        </div>
                         <div class="p-info">
                             <h4>${p.name}</h4>
                             <p class="p-cat">${p.category} | Stok: ${p.stock}</p>
                             <p class="p-price">Rp ${p.price.toLocaleString('id-ID')}</p>
-                            <!-- Tombol Tambah (+) Produk ke Keranjang -->
                             <button onclick="addToCart(${p.id})">➕ Tambah Ke Keranjang</button>
                         </div>
                     </div>
@@ -207,18 +191,4 @@
         }
 
         function saveCart() {
-            localStorage.setItem('xolofox_cart', JSON.stringify(cart));
-            renderCart();
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cartItems');
-            container.innerHTML = '';
-            let total = 0;
-            cart.forEach(item => {
-                total += item.price * item.quantity;
-                container.innerHTML += `
-                    <div class="cart-item">
-                        <span>${item.name} (${item.quantity}x)</span>
-                        <div>
         
