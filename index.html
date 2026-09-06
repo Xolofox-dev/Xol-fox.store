@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xolöfox.id - Temukan Produk Favoritmu</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="YOUR_MIDTRANS_CLIENT_KEY"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Xolöfox.id</div>
+        <div class="nav-links">
+            <a href="#">Beranda</a>
+            <a href="#">Produk</a>
+            <a href="#">Tentang Kami</a>
+        </div>
+        <div class="auth-buttons" id="authSection">
+            <button onclick="openModal('authModal')">👤 Login / Daftar</button>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-content">
+            <span class="welcome-tag">WELCOME TO XOLOFOX.ID</span>
+            <h1>Temukan Produk<br>Favoritmu</h1>
+            <p>Belanja berbagai produk pilihan dengan kualitas terbaik dan harga yang bersahabat.</p>
+            <button class="btn-shop">Belanja Sekarang →</button>
+        </div>
+        <div class="hero-image">
+            <img src="https://cdn-icons-png.flaticon.com/512/3081/3081840.png" alt="Shopping Bags" width="180">
+        </div>
+    </header>
+
+    <section class="features-bar">
+        <div class="feat-item">🏆 <span><strong>Produk Original</strong><br><small>100% Produk Asli</small></span></div>
+        <div class="feat-item">🛡️ <span><strong>Garansi Resmi</strong><br><small>Aman & Terpercaya</small></span></div>
+        <div class="feat-item">⚡ <span><strong>Pengiriman Cepat</strong><br><small>Proses Cepat & Aman</small></span></div>
+        <div class="feat-item">📞 <span><strong>Customer Support</strong><br><small>Siap Membantu Anda</small></span></div>
+    </section>
+
+    <main class="store-container">
+        <h2 class="section-title">Produk Pilihan</h2>
+        <p class="section-subtitle">Temukan produk terbaik untukmu</p>
+
+        <div class="filter-wrapper">
+            <input type="text" id="searchBar" oninput="filterProducts()" placeholder="🔎 Cari produk...">
+            <div class="category-tabs">
+                <button class="tab active" onclick="filterCategory('Semua')">Semua</button>
+                <button class="tab" onclick="filterCategory('Fashion')">Fashion</button>
+                <button class="tab" onclick="filterCategory('Skincare')">Skincare</button>
+                <button class="tab" onclick="filterCategory('Accessories')">Accessories</button>
+                <button class="tab" onclick="filterCategory('Elektronik')">Elektronik</button>
+            </div>
+        </div>
+
+        <div class="products-grid" id="productsContainer"></div>
+    </main>
+
+    <section class="cart-section">
+        <h3>🛒 Keranjang Belanja</h3>
+        <div id="cartItems"></div>
+        <div class="cart-total">Total: <strong id="cartTotal">Rp 0</strong></div>
+        <button class="btn-checkout" onclick="openModal('checkoutModal')">Lanjut ke Checkout 🚀</button>
+    </section>
+
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('authModal')">&times;</span>
+            <h3 id="authTitle">Masuk Akun</h3>
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <input type="text" id="authName" placeholder="Nama Lengkap (Khusus Daftar)" style="display:none;">
+                <input type="email" id="authEmail" placeholder="Email" required>
+                <input type="password" id="authPassword" placeholder="Password" required>
+                <button type="submit" class="btn-block">Submit</button>
+            </form>
+            <p id="toggleAuthText" onclick="toggleAuthMode()" style="cursor:pointer; text-align:center; font-size:12px; margin-top:10px;">Belum punya akun? Daftar disini</p>
+        </div>
+    </div>
+
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('checkoutModal')">&times;</span>
+            <h3>Data Penerima & Pengiriman</h3>
+            <form onsubmit="handleCheckout(event)">
+                <input type="text" id="shipName" placeholder="Nama Penerima" required>
+                <input type="text" id="shipPhone" placeholder="Nomor Handphone" required>
+                <textarea id="shipAddress" placeholder="Alamat Lengkap" required></textarea>
+                <input type="text" id="shipCity" placeholder="Kota" required>
+                <input type="text" id="shipPostal" placeholder="Kode Pos" required>
+                <button type="submit" class="btn-block">Bayar Sekarang via Midtrans 💳</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div><strong>Xolöfox.id</strong><p>Belanja mudah, cepat, dan nyaman hanya di Xolöfox.id</p></div>
+        <div><strong>Menu</strong><p>Beranda<br>Produk<br>Kategori<br>Tentang Kami</p></div>
+        <div><strong>Informasi</strong><p>Cara Belanja<br>Pembayaran<br>Pengiriman<br>Retur & Refund</p></div>
+        <div><strong>Kontak</strong><p>📞 +62 812-3456-7890<br>✉️ info@xolofox.id<br>📍 Indonesia</p></div>
+    </footer>
+
+    <script>
+        let products = [];
+        let cart = JSON.parse(localStorage.getItem('xolofox_cart')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('xolofox_user')) || null;
+        let activeCategory = 'Semua';
+        let isLoginMode = true;
+
+        async function loadProducts() {
+            const res = await fetch('/api/products');
+            products = await res.json();
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('productsContainer');
+            const searchVal = document.getElementById('searchBar').value.toLowerCase();
+            container.innerHTML = '';
+
+            const filtered = products.filter(p => {
+                const matchCat = (activeCategory === 'Semua' || p.category === activeCategory);
+                const matchSearch = p.name.toLowerCase().includes(searchVal);
+                return matchCat && matchSearch;
+            });
+
+            filtered.forEach(p => {
+                container.innerHTML += `
+                    <div class="product-card">
+                        <img src="\${p.image}" alt="\${p.name}">
+                        <div class="p-info">
+                            <h4>\${p.name}</h4>
+                            <p class="p-cat">\${p.category} | Stok: \${p.stock}</p>
+                            <p class="p-price">Rp \${p.price.toLocaleString('id-ID')}</p>
+                            <button onclick="addToCart(\${p.id})">🛒 Ambil</button>
+                        </div>
+                    </div>`;
+            });
+            renderCart();
+        }
+
+        function addToCart(id) {
+            const prod = products.find(p => p.id === id);
+            const cartItem = cart.find(item => item.id === id);
+            if (cartItem) {
+                if(cartItem.quantity < prod.stock) cartItem.quantity++;
+            } else {
+                cart.push({ ...prod, quantity: 1 });
+            }
+            saveCart();
+        }
+
+        function changeQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            const prod = products.find(p => p.id === id);
+            if (item) {
+                item.quantity += delta;
+                if (item.quantity <= 0 || item.quantity > prod.stock) {
+                    cart = cart.filter(i => i.id !== id);
+                }
+                saveCart();
+            }
+        }
+
+        function saveCart() {
+            localStorage.setItem('xolofox_cart', JSON.stringify(cart));
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            container.innerHTML = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <span>\${item.name} (\${item.quantity}x)</span>
+                        <div>
+                            <button onclick="changeQty(\${item.id}, -1)">-</button>
+                            <button onclick="changeQty(\${item.id}, 1)">+</button>
+                        </div>
+                    </div>`;
+            });
+            document.getElementById('cartTotal').innerText = `Rp \${total.toLocaleString('id-ID')}`;
+        }
+
+        function filterCategory(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderProducts();
+        }
+
+        function filterProducts() { renderProducts(); }
+        function openModal(id) { document.getElementById(id).style.display = 'block'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('authTitle').innerText = isLoginMode ? "Masuk Akun" : "Daftar Akun Baru";
+            document.getElementById('authName').style.display = isLoginMode ? "none" : "block";
+            document.getElementById('toggleAuthText').innerText = isLoginMode ? "Belum punya akun? Daftar disini" : "Sudah punya akun? Login disini";
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const name = document.getElementById('authName').value;
+            const url = isLoginMode ? '/api/login' : '/api/register';
+            const body = isLoginMode ? { email, password } : { name, email, password };
+
+            const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+            const data = await res.json();
+            
+            if(res.ok) {
+                if(isLoginMode) {
+                    currentUser = data.user;
+                    localStorage.setItem('xolofox_user', JSON.stringify(data.user));
+                    checkUserSession();
+                    closeModal('authModal');
+                } else {
+                    alert("Registrasi sukses! Silakan login.");
+                    toggleAuthMode();
+                }
+            } else { alert(data.message); }
+        }
+
+        function checkUserSession() {
+            if(currentUser) {
+                document.getElementById('authSection').innerHTML = `
+                    <span>Halo, <strong>\${currentUser.name}</strong> (\${currentUser.role})</span>
+                    \${currentUser.role === 'admin' ? '<button onclick="window.location.href=\'/admin.html\'">⚙️ Admin</button>' : ''}
+                    <button onclick="logout()">Keluar</button>`;
+            }
+        }
+
+        function logout() {
+            fetch('/api/logout', { method: 'POST' });
+            localStorage.removeItem('xolofox_user');
+            currentUser = null;
+            location.reload();
+        }
+
+        async function handleCheckout(e) {
+            e.preventDefault();
+            if(!currentUser) return alert('Silakan login terlebih dahulu untuk melakukan transaksi pembayaran.');
+            if(cart.length === 0) return alert('Keranjang Anda kosong!');
+
+            const orderData = {
+                user_id: currentUser.id,
+                name: document.getElementById('shipName').value,
+                phone: document.getElementById('shipPhone').value,
+                address: document.getElementById('shipAddress').value,
+                city: document.getElementById('shipCity').value,
+                postal_code: document.getElementById('shipPostal').value,
+                items: cart,
+                total_amount: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+            };
+
+            const res = await fetch('/api/checkout', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(orderData) });
+            const data = await res.json();
+
+            if(res.ok) {
+                window.snap.pay(data.token, {
+                    onSuccess: function(result){ alert("Pembayaran sukses!"); cart = []; saveCart(); closeModal('checkoutModal'); loadProducts(); },
+                    onPending: function(result){ alert("Menunggu pembayaran anda."); cart = []; saveCart(); closeModal('checkoutModal'); },
+                    onError: function(result){ alert("Pembayaran gagal!"); }
+                });
+            } else { alert(data.message); }
+        }
+
+        window.onload = () => { loadProducts(); checkUserSession(); };
+    </script>
+</body>
+</html>
