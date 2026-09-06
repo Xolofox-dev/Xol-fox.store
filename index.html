@@ -120,19 +120,19 @@
         <div><strong>Kontak</strong><p>📞 +62 812-3456-7890<br>✉️ info@xolofox.id<br>📍 Indonesia</p></div>
     </footer>
 
-    <script>
-        const products = [
-            { id: 1, name: "Kemeja Flanel Premium", price: 150000, category: "Fashion", stock: 20, image: "https://unsplash.com" },
-            { id: 2, name: "Serum Glowing Hydration", price: 85000, category: "Skincare", stock: 15, image: "https://unsplash.com" },
-            { id: 3, name: "Smartwatch Series X", price: 450000, category: "Elektronik", stock: 10, image: "https://unsplash.com" },
-            { id: 4, name: "Kacamata Hitam Anti UV", price: 120000, category: "Accessories", stock: 30, image: "https://unsplash.com" }
-        ];
+<script>
+    const products = [
+        { id: 1, name: "Kemeja Flanel Premium", price: 150000, category: "Fashion", stock: 20, image: "https://unsplash.com" },
+        { id: 2, name: "Serum Glowing Hydration", price: 85000, category: "Skincare", stock: 15, image: "https://unsplash.com" },
+        { id: 3, name: "Smartwatch Series X", price: 450000, category: "Elektronik", stock: 10, image: "https://unsplash.com" },
+        { id: 4, name: "Kacamata Hitam Anti UV", price: 120000, category: "Accessories", stock: 30, image: "https://unsplash.com" }
+    ]; // <-- PASTIKAN DI BARIS 129 TERTULIS SEPERTI INI, BUKAN ANGKKA 1
 
-        let cart = JSON.parse(localStorage.getItem('xolofox_cart')) || [];
-        let currentUser = JSON.parse(localStorage.getItem('xolofox_user')) || null;
-        let activeCategory = 'Semua';
-        let isLoginMode = true;
-
+    let cart = JSON.parse(localStorage.getItem('xolofox_cart')) || [];
+    let currentUser = JSON.parse(localStorage.getItem('xolofox_user')) || null;
+    let activeCategory = 'Semua';
+    let isLoginMode = true;
+    
         function renderProducts() {
             const container = document.getElementById('productsContainer');
             const searchVal = document.getElementById('searchBar').value.toLowerCase();
