@@ -753,16 +753,16 @@ function saveCart() {
 function addToCart(id) {
     const p = products.find(x => x.id === id);
     if (!p) return;
-    if (p.stok === 0) { toast('❌ Stok habis'); return; }
+    if (p.stok === 0) { toast('Stok habis'); return; }
     const existing = cart.find(c => c.id === id);
     if (existing) {
-        if (existing.jumlah >= p.stok) { toast('❌ Stok tidak cukup'); return; }
+        if (existing.jumlah >= p.stok) { toast('Stok tidak cukup'); return; }
         existing.jumlah += 1;
     } else {
         cart.push({ id: p.id, nama: p.nama, harga: Number(p.harga), gambar: p.gambar || '', kategori: p.kategori || 'Produk', jumlah: 1, maxStok: Number(p.stok) || 0 });
     }
     saveCart();
-    toast('✅ Ditambahkan ke keranjang');
+    toast('Ditambahkan ke keranjang');
 }
 function removeFromCart(id) { cart = cart.filter(c => c.id !== id); saveCart(); toast('🗑️ Dihapus dari keranjang'); }
 function updateQty(id, delta) {
@@ -770,7 +770,7 @@ function updateQty(id, delta) {
     if (!item) return;
     const newQty = item.jumlah + delta;
     if (newQty < 1) { removeFromCart(id); return; }
-    if (newQty > item.maxStok) { toast('❌ Stok tidak cukup'); return; }
+    if (newQty > item.maxStok) { toast('Stok tidak cukup'); return; }
     item.jumlah = newQty;
     saveCart();
 }
@@ -814,7 +814,7 @@ function renderCart() {
 
 /* ============ CHECKOUT (FIXED) ============ */
 async function checkout() {
-    if (!cart.length) { toast('❌ Keranjang kosong'); return; }
+    if (!cart.length) { toast('Keranjang kosong'); return; }
     const total = getCartTotal();
     if (!confirm(`Lanjutkan pembayaran?\n\nTotal: Rp ${total.toLocaleString('id-ID')}\n${getCartCount()} produk\n\nAnda akan diarahkan ke pembayaran QRIS.`)) return;
 
@@ -864,7 +864,7 @@ async function checkout() {
 async function buyProduct(id) {
     const p = products.find(x => x.id === id);
     if (!p) return;
-    if (p.stok === 0) { toast('❌ Stok habis'); return; }
+    if (p.stok === 0) { toast('Stok habis'); return; }
     if (!confirm(`Beli "${p.nama}" seharga Rp ${Number(p.harga).toLocaleString('id-ID')}?\n\nAnda akan diarahkan ke pembayaran QRIS.`)) return;
 
     showLoading('Membuat QRIS...');
@@ -943,9 +943,9 @@ function startPolling(txId) {
             if (tx.status === 'Diproses') {
                 stopPolling(); stopCountdown();
                 document.getElementById('qrisStatus').className = 'qris-status ok';
-                document.getElementById('qrisStatus').innerHTML = '✅ Pembayaran Berhasil!';
+                document.getElementById('qrisStatus').innerHTML = 'Pembayaran Berhasil!';
                 document.getElementById('qrisTimer').style.display = 'none';
-                toast('✅ Pembayaran berhasil!');
+                toast('Pembayaran berhasil!');
                 setTimeout(() => {
                     const snapshot = lastOrderSnapshot;
                     const paidTx = { ...tx };
@@ -957,7 +957,7 @@ function startPolling(txId) {
             } else if (tx.status === 'Expired') {
                 stopPolling();
                 document.getElementById('qrisStatus').className = 'qris-status expired';
-                document.getElementById('qrisStatus').innerHTML = '⏰ QR Code Kadaluarsa';
+                document.getElementById('qrisStatus').innerHTML = 'QR Code Kadaluarsa';
                 document.getElementById('qrisTimer').style.display = 'none';
             } else if (tx.status === 'Dibatalkan') {
                 stopPolling(); closeQris();
@@ -993,7 +993,7 @@ async function cancelQris() {
             body: JSON.stringify({ transaction_id: currentTx.id })
         });
         const data = await res.json();
-        if (data.success) { toast('❌ Pembayaran dibatalkan'); closeQris(); loadTransactions(); }
+        if (data.success) { toast('Pembayaran dibatalkan'); closeQris(); loadTransactions(); }
     } catch (e) { toast('Gagal: ' + e.message); }
 }
 
@@ -1059,15 +1059,15 @@ async function saveProfile(field, value) {
         const { error } = await db.from('profiles').update({ [field]: value }).eq('id', user.id);
         if (error) throw error;
         if (profile) profile[field] = value;
-        toast('✅ Tersimpan');
+        toast('Tersimpan');
         if (field === 'name') applyProfile();
-    } catch (e) { toast('❌ Gagal: ' + e.message); }
+    } catch (e) { toast('Gagal: ' + e.message); }
 }
 
 document.getElementById('avatarUpload').addEventListener('change', async function(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { toast('❌ Maks 2MB'); return; }
+    if (file.size > 2 * 1024 * 1024) { toast('Maks 2MB'); return; }
     showLoading('Upload avatar...');
     try {
         const ext = file.name.split('.').pop();
@@ -1078,7 +1078,7 @@ document.getElementById('avatarUpload').addEventListener('change', async functio
         await db.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
         if (profile) profile.avatar_url = publicUrl;
         applyProfile();
-        toast('✅ Avatar diubah');
+        toast('Avatar diubah');
     } catch (e) { toast('❌ ' + e.message); }
     finally { hideLoading(); }
 });
