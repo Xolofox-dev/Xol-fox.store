@@ -227,9 +227,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 <div class="user-avatar" onclick="toggleDropdown(event)"><img src="" alt="User" id="navAvatar"></div>
 <div class="dropdown" id="userDropdown">
 <div class="dd-header"><div class="name" id="ddName">User</div><div class="email" id="ddEmail">-</div></div>
-<div class="dd-item" onclick="navigate('profil')">👤 Profil Saya</div>
-<div class="dd-item" onclick="navigate('transaksi')">📦 Transaksi</div>
-<div class="dd-item danger" onclick="handleLogout()">🚪 Logout</div>
+<div class="dd-item" onclick="navigate('profil')">Profil Saya</div>
+<div class="dd-item" onclick="navigate('transaksi')">Transaksi</div>
+<div class="dd-item danger" onclick="handleLogout()">Logout</div>
 </div>
 </div>
 </div>
@@ -357,8 +357,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 /* ==================================================
    KONFIGURASI SUPABASE
 ================================================== */
-const SUPABASE_URL = 'https://cvirbvuporpbmvglbvgn.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_eGTWLoJYLayZIioIz-emuBg_082C2v3f';
+const SUPABASE_URL = 'https://cvirbvuporpbmvgibvgn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_eGTWLojYLAyZ1o1z-enuBg_082CZv3f';
 
 /* ==================================================
    INIT SUPABASE CLIENT
@@ -401,7 +401,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Safety: paksa hide loading setelah 4 detik apapun yang terjadi
     const safetyTimer = setTimeout(() => {
-        console.warn('⚠️ Safety: force hide loading');
+        console.warn('Safety: force hide loading');
         const el = document.getElementById('loading');
         if (el) el.classList.add('hidden');
     }, 4000);
@@ -421,10 +421,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
             if (session && session.user) {
                 user = session.user;
-                console.log('✅ Logged in:', user.email);
+                console.log('Logged in:', user.email);
                 await onLogin();
             } else {
-                console.log('ℹ️ No session, showing login');
+                console.log('No session, showing login');
                 showLogin();
             }
 
@@ -448,16 +448,16 @@ window.addEventListener('DOMContentLoaded', () => {
             // Load products
             await loadProducts();
 
-            console.log('✅ Init complete');
+            console.log('Init complete');
         } catch (err) {
-            console.error('❌ INIT ERROR:', err);
+            console.error('INIT ERROR:', err);
             try { showLogin(); } catch (e) {}
         } finally {
             clearTimeout(safetyTimer);
             setTimeout(() => {
                 const el = document.getElementById('loading');
                 if (el) el.classList.add('hidden');
-                console.log('✅ Loading hidden');
+                console.log('Loading hidden');
             }, 300);
         }
     })();
