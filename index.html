@@ -311,10 +311,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 <div class="user-avatar" onclick="toggleDropdown(event)"><img src="" alt="User" id="navAvatar"></div>
 <div class="dropdown" id="userDropdown">
 <div class="dd-header"><div class="name" id="ddName">User</div><div class="email" id="ddEmail">-</div></div>
-<div class="dd-item" onclick="navigate('profil')">👤 Profil Saya</div>
-<div class="dd-item" onclick="navigate('transaksi')">📦 Transaksi</div>
-<div class="dd-item" onclick="navigate('info')">ℹ️ Informasi</div>
-<div class="dd-item danger" onclick="handleLogout()">🚪 Logout</div>
+<div class="dd-item" onclick="navigate('profil')">Profil Saya</div>
+<div class="dd-item" onclick="navigate('transaksi')">Transaksi</div>
+<div class="dd-item" onclick="navigate('info')">Informasi</div>
+<div class="dd-item danger" onclick="handleLogout()">Logout</div>
 </div>
 </div>
 </div>
@@ -444,7 +444,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 <div class="detail-desc" id="detailDesc"></div>
 <div class="detail-actions">
 <button class="btn-cart-add" id="detailCartBtn">🛒 Tambah Keranjang</button>
-<button class="btn-buy" id="detailBuyBtn">⚡ Beli Sekarang</button>
+<button class="btn-buy" id="detailBuyBtn">Beli Sekarang</button>
 </div>
 </div>
 </div>
@@ -491,8 +491,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://cvirbvuporpbmvglbvgn.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_eGTWLoJYLayZIioIz-emuBg_082C2v3f';
+const SUPABASE_URL = 'https://cvirbvuporpbmvgibvgn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_eGTWLojYLAyZ1o1z-enuBg_082CZv3f';
 
 let db = null;
 try {
@@ -608,13 +608,13 @@ async function handleRegister(e) {
     const msg = document.getElementById('registerMsg');
     const btn = document.getElementById('registerBtn');
     msg.className = 'auth-msg'; msg.textContent = '';
-    if (name.length < 3) { msg.className = 'auth-msg error'; msg.textContent = '❌ Nama minimal 3 karakter'; return; }
-    if (password.length < 6) { msg.className = 'auth-msg error'; msg.textContent = '❌ Password minimal 6 karakter'; return; }
+    if (name.length < 3) { msg.className = 'auth-msg error'; msg.textContent = 'Nama minimal 3 karakter'; return; }
+    if (password.length < 6) { msg.className = 'auth-msg error'; msg.textContent = 'Password minimal 6 karakter'; return; }
     btn.disabled = true; btn.innerHTML = '<div class="btn-spin"></div> Mendaftar...';
     try {
         const { data, error } = await db.auth.signUp({ email, password, options: { data: { name }, emailRedirectTo: window.location.origin } });
         if (error) throw error;
-        msg.className = 'auth-msg success'; msg.textContent = '✅ Pendaftaran berhasil! Cek email untuk verifikasi.';
+        msg.className = 'auth-msg success'; msg.textContent = 'Pendaftaran berhasil! Cek email untuk verifikasi.';
         document.getElementById('registerForm').reset();
         setTimeout(() => { showLogin(); document.getElementById('loginEmail').value = email; }, 3000);
     } catch (err) {
@@ -642,7 +642,7 @@ async function handleLogout() {
     document.getElementById('app').style.display = 'none';
     document.getElementById('userDropdown').classList.remove('show');
     showLogin();
-    toast('👋 Logout berhasil');
+    toast('Logout berhasil');
 }
 
 function showLogin() {
@@ -739,7 +739,7 @@ function openDetail(id) {
         cartBtn.disabled = true; cartBtn.textContent = 'Stok Habis'; cartBtn.onclick = null;
         cartBtn.style.opacity = .5; cartBtn.style.cursor = 'not-allowed';
     } else {
-        buyBtn.disabled = false; buyBtn.textContent = '⚡ Beli Sekarang';
+        buyBtn.disabled = false; buyBtn.textContent = 'Beli Sekarang';
         buyBtn.onclick = () => { closeDetail(); buyProduct(p.id); };
         cartBtn.disabled = false; cartBtn.textContent = '🛒 Tambah Keranjang';
         cartBtn.style.opacity = 1; cartBtn.style.cursor = 'pointer';
@@ -766,16 +766,16 @@ function saveCart() {
 function addToCart(id) {
     const p = products.find(x => x.id === id);
     if (!p) return;
-    if (p.stok === 0) { toast('❌ Stok habis'); return; }
+    if (p.stok === 0) { toast('Stok habis'); return; }
     const existing = cart.find(c => c.id === id);
     if (existing) {
-        if (existing.jumlah >= p.stok) { toast('❌ Stok tidak cukup'); return; }
+        if (existing.jumlah >= p.stok) { toast('Stok tidak cukup'); return; }
         existing.jumlah += 1;
     } else {
         cart.push({ id: p.id, nama: p.nama, harga: Number(p.harga), gambar: p.gambar || '', kategori: p.kategori || 'Produk', jumlah: 1, maxStok: Number(p.stok) || 0 });
     }
     saveCart();
-    toast('✅ Ditambahkan ke keranjang');
+    toast('Ditambahkan ke keranjang');
 }
 function removeFromCart(id) { cart = cart.filter(c => c.id !== id); saveCart(); toast('🗑️ Dihapus dari keranjang'); }
 function updateQty(id, delta) {
@@ -783,7 +783,7 @@ function updateQty(id, delta) {
     if (!item) return;
     const newQty = item.jumlah + delta;
     if (newQty < 1) { removeFromCart(id); return; }
-    if (newQty > item.maxStok) { toast('❌ Stok tidak cukup'); return; }
+    if (newQty > item.maxStok) { toast('Stok tidak cukup'); return; }
     item.jumlah = newQty;
     saveCart();
 }
@@ -826,7 +826,7 @@ function renderCart() {
 }
 
 async function checkout() {
-    if (!cart.length) { toast('❌ Keranjang kosong'); return; }
+    if (!cart.length) { toast('Keranjang kosong'); return; }
     const total = getCartTotal();
     if (!confirm(`Lanjutkan pembayaran?\n\nTotal: Rp ${total.toLocaleString('id-ID')}\n${getCartCount()} produk\n\nAnda akan diarahkan ke pembayaran QRIS.`)) return;
 
@@ -875,7 +875,7 @@ async function checkout() {
 async function buyProduct(id) {
     const p = products.find(x => x.id === id);
     if (!p) return;
-    if (p.stok === 0) { toast('❌ Stok habis'); return; }
+    if (p.stok === 0) { toast('Stok habis'); return; }
     if (!confirm(`Beli "${p.nama}" seharga Rp ${Number(p.harga).toLocaleString('id-ID')}?\n\nAnda akan diarahkan ke pembayaran QRIS.`)) return;
 
     showLoading('Membuat QRIS...');
@@ -952,9 +952,9 @@ function startPolling(txId) {
             if (tx.status === 'Diproses') {
                 stopPolling(); stopCountdown();
                 document.getElementById('qrisStatus').className = 'qris-status ok';
-                document.getElementById('qrisStatus').innerHTML = '✅ Pembayaran Berhasil!';
+                document.getElementById('qrisStatus').innerHTML = 'Pembayaran Berhasil!';
                 document.getElementById('qrisTimer').style.display = 'none';
-                toast('✅ Pembayaran berhasil!');
+                toast('Pembayaran berhasil!');
                 setTimeout(() => {
                     const snapshot = lastOrderSnapshot;
                     const paidTx = { ...tx };
@@ -966,7 +966,7 @@ function startPolling(txId) {
             } else if (tx.status === 'Expired') {
                 stopPolling();
                 document.getElementById('qrisStatus').className = 'qris-status expired';
-                document.getElementById('qrisStatus').innerHTML = '⏰ QR Code Kadaluarsa';
+                document.getElementById('qrisStatus').innerHTML = 'QR Code Kadaluarsa';
                 document.getElementById('qrisTimer').style.display = 'none';
             } else if (tx.status === 'Dibatalkan') {
                 stopPolling(); closeQris();
@@ -1002,7 +1002,7 @@ async function cancelQris() {
             body: JSON.stringify({ transaction_id: currentTx.id })
         });
         const data = await res.json();
-        if (data.success) { toast('❌ Pembayaran dibatalkan'); closeQris(); loadTransactions(); }
+        if (data.success) { toast('Pembayaran dibatalkan'); closeQris(); loadTransactions(); }
     } catch (e) { toast('Gagal: ' + e.message); }
 }
 
@@ -1068,15 +1068,15 @@ async function saveProfile(field, value) {
         const { error } = await db.from('profiles').update({ [field]: value }).eq('id', user.id);
         if (error) throw error;
         if (profile) profile[field] = value;
-        toast('✅ Tersimpan');
+        toast('Tersimpan');
         if (field === 'name') applyProfile();
-    } catch (e) { toast('❌ Gagal: ' + e.message); }
+    } catch (e) { toast('Gagal: ' + e.message); }
 }
 
 document.getElementById('avatarUpload').addEventListener('change', async function(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { toast('❌ Maks 2MB'); return; }
+    if (file.size > 2 * 1024 * 1024) { toast('Maks 2MB'); return; }
     showLoading('Upload avatar...');
     try {
         const ext = file.name.split('.').pop();
@@ -1087,7 +1087,7 @@ document.getElementById('avatarUpload').addEventListener('change', async functio
         await db.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
         if (profile) profile.avatar_url = publicUrl;
         applyProfile();
-        toast('✅ Avatar diubah');
+        toast('Avatar diubah');
     } catch (e) { toast('❌ ' + e.message); }
     finally { hideLoading(); }
 });
@@ -1160,7 +1160,7 @@ async function cancelTx(id) {
             body: JSON.stringify({ transaction_id: id })
         });
         const data = await res.json();
-        if (data.success) { toast('❌ Dibatalkan'); loadTransactions(); }
+        if (data.success) { toast('Dibatalkan'); loadTransactions(); }
         else toast('❌ ' + data.error);
     } catch (e) { toast('❌ ' + e.message); }
 }
