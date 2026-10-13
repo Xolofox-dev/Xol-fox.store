@@ -265,9 +265,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 </div>
 <div class="chips">
 <button class="chip active" data-cat="semua" onclick="setCategory(this)">Semua</button>
-<button class="chip" data-cat="aksesoris" onclick="setCategory(this)">Aksesoris</button>
-<button class="chip" data-cat="audio" onclick="setCategory(this)">Audio</button>
-<button class="chip" data-cat="footwear" onclick="setCategory(this)">Footwear</button>
+<button class="chip" data-cat="Premium" onclick="setCategory(this)">Premium</button>
+<button class="chip" data-cat="Vvip" onclick="setCategory(this)">Vvip</button>
+<button class="chip" data-cat="Sewa Bot" onclick="setCategory(this)">Sewa Bot</button>
 </div>
 <div class="grid" id="productGrid"></div>
 </div>
@@ -367,12 +367,12 @@ let db = null;
 try {
     if (window.supabase && window.supabase.createClient) {
         db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('✅ Supabase client initialized');
+        console.log('Supabase client initialized');
     } else {
-        console.error('❌ Supabase SDK tidak ter-load');
+        console.error('Supabase SDK tidak ter-load');
     }
 } catch (e) {
-    console.error('❌ Supabase init error:', e);
+    console.error('Supabase init error:', e);
 }
 
 /* ==================================================
@@ -388,9 +388,9 @@ let countdown = null;
 let currentTx = null;
 
 const FALLBACK_PRODUCTS = [
-    { id: 'P001', nama: 'Aligh Motion', kategori: 'aksesoris', harga: 15000, stok: 140, gambar: 'images/product1.jpg', deskripsi: 'Upgrade editing kamu ke versi premium. • Unlock all effects • No watermark • Support preset XML 5 MB • Support link Alight Creative • Download dari Play Store • Support Android.' },
-    { id: 'P002', nama: 'Bot Vvip', kategori: 'audio', harga: 40000, stok: 250, gambar: 'images/product2.jpg', deskripsi: 'Upgrade pengalaman WhatsApp kamu. • Fitur premium • Respons cepat • Praktis dan otomatis • Akses eksklusif VVIP.' },
-    { id: 'P003', nama: 'Bot Grub', kategori: 'footwear', harga: 35000, stok: 140, gambar: 'images/product3.jpg', deskripsi: 'Butuh bot WhatsApp sendiri? • Aktif selama 1 bulan • Fitur lengkap • Praktis dan otomatis • Support 24/7.' }
+    { id: 'P001', nama: 'Aligh Motion', kategori: 'Premium', harga: 15000, stok: 140, gambar: 'https://raw.githubusercontent.com/ZrooPro/SaveDat1/main/uploads/20261001_183317_908_0tuedne1.jpg', deskripsi: 'Upgrade editing kamu ke versi premium. • Unlock all effects • No watermark • Support preset XML 5 MB • Support link Alight Creative • Download dari Play Store • Support Android.' },
+    { id: 'P002', nama: 'Bot Vvip', kategori: 'Vvip', harga: 40000, stok: 250, gambar: 'https://raw.githubusercontent.com/ZrooPro/SaveDat1/main/uploads/20261009_121631_373_tqewxdsj.jpg', deskripsi: 'Upgrade pengalaman WhatsApp kamu. • Fitur premium • Respons cepat • Praktis dan otomatis • Akses eksklusif VVIP.' },
+    { id: 'P003', nama: 'Bot Grub', kategori: 'footwear', harga: 35000, stok: 140, gambar: 'https://raw.githubusercontent.com/ZrooPro/SaveDat1/main/uploads/20261012_145155_729_n3vzhr9j.jpg', deskripsi: 'Butuh bot WhatsApp sendiri? • Aktif selama 1 bulan • Fitur lengkap • Praktis dan otomatis • Support 24/7.' }
 ];
 
 /* ==================================================
