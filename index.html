@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDIO. — Web Modern dengan QRIS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg: #ffffff; --bg-secondary: #f4f4f5; --card: #ffffff;
+            --text: #111111; --text-muted: #888888;
+            --accent: #6366f1; --accent-2: #ec4899;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --border: #eaeaea; --radius: 24px;
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        [data-theme="dark"] {
+            --bg: #0a0a0a; --bg-secondary: #1a1a1a; --card: #141414;
+            --text: #ffffff; --text-muted: #a1a1a1; --border: #2a2a2a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg); color: var(--text); line-height: 1.6;
+            transition: background-color var(--transition), color var(--transition);
+            -webkit-font-smoothing: antialiased; overflow-x: hidden; padding-bottom: 110px;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 10px; }
+
+        /* LOADING */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: var(--bg); z-index: 99999;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column; gap: 20px;
+        }
+        .loading-overlay.hidden { opacity: 0; pointer-events: none; display: none; }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 14px; color: var(--text-muted); font-weight: 600; }
+
+        /* AUTH */
+        .auth-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: linear-gradient(135deg, var(--bg) 0%, var(--bg-secondary) 100%);
+            z-index: 9999; padding: 20px; overflow-y: auto;
+        }
+        .auth-page.hidden { display: none !important; }
+        .auth-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 44px 40px;
+            width: 100%; max-width: 440px;
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.15);
+            margin: auto;
+        }
+        .auth-logo {
+            font-size: 28px; font-weight: 800; letter-spacing: -1px;
+            margin-bottom: 8px; text-align: center;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .auth-title { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+        .auth-subtitle { font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 28px; }
+        .auth-form .form-group { margin-bottom: 16px; display: flex; flex-direction: column; }
+        .auth-form label {
+            font-size: 12px; font-weight: 600; margin-bottom: 8px;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .auth-form input {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 16px; font-size: 15px;
+            font-family: inherit; color: var(--text); outline: none; width: 100%;
+            transition: all var(--transition);
+        }
+        .auth-form input:focus {
+            border-color: var(--accent); background: var(--bg);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+        .field-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+        .field-hint.error { color: var(--danger); }
+        .field-hint.success { color: var(--success); }
+        .password-wrapper { position: relative; }
+        .password-toggle {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; color: var(--text-muted);
+        }
+        .password-toggle svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .strength-bar { display: flex; gap: 4px; margin-top: 8px; }
+        .strength-bar .bar { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background 0.3s; }
+        .strength-bar.weak .bar:nth-child(1) { background: var(--danger); }
+        .strength-bar.medium .bar:nth-child(1),
+        .strength-bar.medium .bar:nth-child(2) { background: var(--warning); }
+        .strength-bar.strong .bar { background: var(--success); }
+        .auth-btn {
+            width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white; border: none; padding: 15px; border-radius: 12px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            margin-top: 12px; font-family: inherit;
+            transition: transform var(--transition);
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .auth-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -10px var(--accent); }
+        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-spinner {
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        .auth-error {
+            background: rgba(239, 68, 68, 0.1); color: var(--danger);
+            padding: 12px 16px; border-radius: 10px; font-size: 13px;
+            font-weight: 600; margin-bottom: 16px; display: none; text-align: center;
+        }
+        .auth-error.show { display: block; animation: shake 0.4s; }
+        .auth-success {
+            background: rgba(16, 185, 129, 0.1); color: var(--success);
+            padding: 12px 16px; border-radius: 10px; font-size: 13px;
+            font-weight: 600; margin-bottom: 16px; display: none; text-align: center;
+        }
+        .auth-success.show { display: block; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .auth-switch { text-align: center; font-size: 14px; color: var(--text-muted); margin-top: 20px; }
+        .auth-switch button {
+            background: none; border: none; color: var(--accent);
+            font-weight: 700; cursor: pointer; font-size: 14px; font-family: inherit;
+        }
+        .auth-switch button:hover { text-decoration: underline; }
+        .checkbox-group {
+            display: flex; align-items: flex-start; gap: 10px;
+            margin: 16px 0; font-size: 13px; color: var(--text-muted);
+        }
+        .checkbox-group input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; margin-top: 2px; }
+        .checkbox-group a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+        /* TOP NAV */
+        .top-navbar {
+            position: fixed; top: 0; width: 100%; padding: 20px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg); backdrop-filter: blur(12px);
+            z-index: 100; border-bottom: 1px solid var(--border);
+        }
+        .logo {
+            font-weight: 800; font-size: 20px; letter-spacing: -0.5px; cursor: pointer;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .top-nav-right { display: flex; align-items: center; gap: 14px; }
+        .theme-toggle {
+            background: var(--bg-secondary); border: none; width: 40px; height: 40px;
+            border-radius: 50%; cursor: pointer; display: flex;
+            justify-content: center; align-items: center; font-size: 18px; outline: none;
+        }
+        .user-menu { position: relative; }
+        .user-avatar {
+            width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+            cursor: pointer; border: 2px solid var(--accent); background: var(--bg-secondary);
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-dropdown {
+            position: absolute; top: 52px; right: 0; background: var(--card);
+            border: 1px solid var(--border); border-radius: 14px; padding: 8px;
+            min-width: 200px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+            opacity: 0; visibility: hidden; transform: translateY(-8px);
+            transition: all var(--transition); z-index: 200;
+        }
+        .user-dropdown.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .dropdown-header { padding: 12px 14px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+        .dropdown-header .name { font-size: 14px; font-weight: 700; }
+        .dropdown-header .email { font-size: 12px; color: var(--text-muted); }
+        .dropdown-item {
+            padding: 10px 14px; border-radius: 8px; font-size: 14px;
+            font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 10px;
+        }
+        .dropdown-item:hover { background: var(--bg-secondary); }
+        .dropdown-item.danger { color: var(--danger); }
+
+        /* BOTTOM NAV */
+        .bottom-nav-wrapper {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 999; width: auto; max-width: 95%;
+        }
+        .bottom-nav {
+            background: var(--card); border-radius: 50px; padding: 8px 16px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.04); backdrop-filter: blur(20px);
+        }
+        .nav-btn {
+            width: 50px; height: 50px; border-radius: 50% !important;
+            background: transparent; border: none; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--text); transition: all 0.3s; position: relative;
+            flex-shrink: 0; outline: none; -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+        }
+        .nav-btn svg {
+            width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.5;
+            fill: none; stroke-linecap: round; stroke-linejoin: round; z-index: 2;
+        }
+        .nav-btn:hover { background: var(--bg-secondary); transform: translateY(-2px); }
+        .nav-btn:active { transform: scale(0.92); }
+        .nav-btn.active { background: var(--bg-secondary); }
+        [data-theme="dark"] .nav-btn.active { background: #2a2a2a; }
+        .nav-btn .ripple {
+            position: absolute; border-radius: 50%;
+            background: rgba(0, 0, 0, 0.1); transform: scale(0);
+            animation: rippleAnim 0.6s ease-out; pointer-events: none; z-index: 1;
+        }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+        .nav-btn.center-btn {
+            width: 56px; height: 56px; background: var(--text); color: var(--bg);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2); margin: 0 6px;
+        }
+        .nav-btn.center-btn svg { width: 24px; height: 24px; stroke: var(--bg); stroke-width: 2.2; }
+        .nav-btn.center-btn .ripple { background: rgba(255, 255, 255, 0.4); }
+        .nav-btn .badge {
+            position: absolute; top: 4px; right: 4px; background: var(--danger);
+            color: white; font-size: 10px; font-weight: 700; min-width: 18px;
+            height: 18px; border-radius: 50%; display: flex;
+            justify-content: center; align-items: center; padding: 0 4px;
+            border: 2px solid var(--card); z-index: 3;
+        }
+
+        /* PAGE */
+        .page { display: none; padding-top: 100px; min-height: 100vh; }
+        .page.active { display: block; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 5% 60px; }
+        .page-title {
+            font-size: clamp(32px, 5vw, 48px); font-weight: 800;
+            letter-spacing: -1.5px; margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .page-subtitle { font-size: 16px; color: var(--text-muted); margin-bottom: 30px; }
+
+        /* SEARCH */
+        .search-bar {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 50px; padding: 14px 24px; margin-bottom: 30px;
+            max-width: 600px;
+        }
+        .search-bar:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        .search-bar svg { width: 20px; height: 20px; stroke: var(--text-muted); stroke-width: 2; fill: none; }
+        .search-bar input { flex: 1; border: none; background: transparent; font-size: 15px; font-family: inherit; color: var(--text); outline: none; }
+        .filter-chips { display: flex; gap: 10px; margin-bottom: 30px; overflow-x: auto; scrollbar-width: none; }
+        .filter-chips::-webkit-scrollbar { display: none; }
+        .chip {
+            background: var(--card); border: 1px solid var(--border);
+            color: var(--text-muted); padding: 8px 18px; border-radius: 50px;
+            font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit;
+        }
+        .chip:hover { border-color: var(--text-muted); color: var(--text); }
+        .chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+        /* PRODUK */
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 28px; }
+        .product-item {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden; transition: all var(--transition);
+            display: flex; flex-direction: column;
+        }
+        .product-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -20px rgba(99, 102, 241, 0.25);
+            border-color: var(--accent);
+        }
+        .product-image { width: 100%; height: 240px; background: var(--bg-secondary); overflow: hidden; position: relative; }
+        .product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--transition); }
+        .product-item:hover .product-image img { transform: scale(1.08); }
+        .product-badge {
+            position: absolute; top: 12px; right: 12px;
+            background: rgba(255, 255, 255, 0.95); color: var(--text);
+            font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 50px;
+        }
+        .product-badge.low { background: rgba(245, 158, 11, 0.95); color: white; }
+        .product-badge.empty { background: rgba(239, 68, 68, 0.95); color: white; }
+        .product-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .product-category { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .product-name { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+        .product-desc {
+            font-size: 13px; color: var(--text-muted); margin-bottom: 16px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; flex-grow: 1;
+        }
+        .product-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 14px; border-top: 1px solid var(--border); margin-top: auto;
+        }
+        .product-price { font-size: 18px; font-weight: 800; }
+        .product-stock { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .product-stock.low { color: var(--warning); }
+        .product-stock.empty { color: var(--danger); }
+        .product-actions { display: flex; gap: 8px; margin-top: 16px; }
+        .btn-buy {
+            flex: 1; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white; border: none; padding: 12px; border-radius: 12px;
+            font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .btn-buy:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -10px var(--accent); }
+        .btn-buy:disabled { background: var(--bg-secondary); color: var(--text-muted); cursor: not-allowed; transform: none; }
+        .btn-detail {
+            background: transparent; color: var(--text); border: 1px solid var(--border);
+            padding: 12px 16px; border-radius: 12px; font-size: 14px;
+            font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+        .btn-detail:hover { background: var(--bg-secondary); }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px);
+            z-index: 9998; display: flex; justify-content: center; align-items: center;
+            padding: 20px; opacity: 0; visibility: hidden; transition: all var(--transition);
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--card); border-radius: var(--radius);
+            max-width: 800px; width: 100%; max-height: 90vh;
+            overflow-y: auto; position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 16px; right: 16px; width: 36px; height: 36px;
+            border-radius: 50%; background: var(--bg-secondary); border: none;
+            cursor: pointer; font-size: 18px; color: var(--text); z-index: 10;
+        }
+        .modal-close:hover { background: var(--danger); color: white; }
+        .modal-body { display: grid; grid-template-columns: 1fr 1fr; }
+        .modal-image { min-height: 400px; background: var(--bg-secondary); overflow: hidden; }
+        .modal-image img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-info { padding: 40px 32px; display: flex; flex-direction: column; }
+        .modal-info .product-name { font-size: 26px; margin-bottom: 12px; }
+        .modal-info .product-price { font-size: 28px; margin-bottom: 20px; color: var(--accent); font-weight: 800; }
+        .modal-info .product-stock {
+            display: inline-block; margin-bottom: 20px; font-size: 12px;
+            padding: 6px 14px; border-radius: 50px; font-weight: 700;
+        }
+        .modal-desc-title {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text-muted);
+            margin-bottom: 10px; margin-top: 20px;
+        }
+        .modal-desc { font-size: 14px; }
+        .modal-specs { list-style: none; }
+        .modal-specs li {
+            padding: 8px 0; font-size: 14px; color: var(--text-muted);
+            display: flex; gap: 8px; border-bottom: 1px dashed var(--border);
+        }
+        .modal-specs li strong { color: var(--text); min-width: 100px; font-weight: 600; }
+        @media (max-width: 768px) {
+            .modal-body { grid-template-columns: 1fr; }
+            .modal-image { min-height: 240px; height: 240px; }
+            .modal-info { padding: 24px; }
+        }
+
+        /* QRIS MODAL */
+        .qris-modal-content {
+            background: var(--card); border-radius: var(--radius);
+            max-width: 480px; width: 100%; position: relative;
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .qris-body { padding: 40px 32px; text-align: center; }
+        .qris-body h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+        .qris-body .subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+        .qris-image-box {
+            background: white; padding: 20px; border-radius: 16px;
+            display: inline-block; margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .qris-image-box img {
+            width: 240px; height: 240px; display: block;
+        }
+        .qris-amount-box {
+            background: var(--bg-secondary); padding: 16px; border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .qris-amount-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .qris-amount-value { font-size: 24px; font-weight: 800; color: var(--accent); }
+        .qris-status {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; font-size: 14px; color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .qris-status .dot-loading {
+            width: 16px; height: 16px; border: 2px solid var(--border);
+            border-top-color: var(--accent); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .qris-status.success { color: var(--success); font-weight: 700; }
+        .qris-status.expired { color: var(--warning); font-weight: 700; }
+        .qris-timer { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+        .qris-timer b { color: var(--danger); font-weight: 700; }
+        .qris-cancel-btn {
+            margin-top: 8px; background: transparent; color: var(--danger);
+            border: 1px solid var(--danger); padding: 12px 24px; border-radius: 50px;
+            font-weight: 600; cursor: pointer; font-family: inherit; width: 100%;
+        }
+        .qris-cancel-btn:hover { background: var(--danger); color: white; }
+        .qris-methods {
+            display: flex; justify-content: center; gap: 8px;
+            flex-wrap: wrap; margin-bottom: 16px;
+        }
+        .qris-methods span {
+            font-size: 10px; font-weight: 700; padding: 4px 10px;
+            background: var(--bg-secondary); border-radius: 50px;
+            color: var(--text-muted);
+        }
+
+        /* PROFIL */
+        .profile-header {
+            display: flex; align-items: center; gap: 30px;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 40px;
+            margin-bottom: 30px; flex-wrap: wrap;
+            position: relative; overflow: hidden;
+        }
+        .profile-header::before {
+            content: ''; position: absolute; top: -50%; right: -10%;
+            width: 300px; height: 300px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            border-radius: 50%; opacity: 0.08;
+        }
+        .profile-avatar-wrapper { position: relative; }
+        .profile-avatar {
+            width: 130px; height: 130px; border-radius: 50%; overflow: hidden;
+            background: var(--bg-secondary); border: 4px solid var(--card);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-edit-btn {
+            position: absolute; bottom: 4px; right: 4px;
+            width: 38px; height: 38px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white; border: 3px solid var(--card); cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .avatar-edit-btn svg { width: 16px; height: 16px; stroke: white; stroke-width: 2; fill: none; }
+        #avatarUpload { display: none; }
+        .profile-meta { flex: 1; min-width: 200px; z-index: 1; }
+        .profile-meta h2 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+        .profile-meta .email-display { color: var(--text-muted); font-size: 15px; margin-bottom: 12px; }
+        .profile-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white; font-size: 11px; font-weight: 700;
+            padding: 5px 14px; border-radius: 50px;
+        }
+        .edit-hint {
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 20px; background: rgba(99, 102, 241, 0.08);
+            border: 1px dashed var(--accent); border-radius: 14px;
+            margin-bottom: 30px; font-size: 13px; font-weight: 500; color: var(--accent);
+        }
+        .edit-hint svg { width: 18px; height: 18px; stroke: var(--accent); stroke-width: 2; fill: none; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label {
+            font-size: 13px; font-weight: 600; margin-bottom: 8px;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+            display: flex; justify-content: space-between;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 16px; font-size: 15px;
+            font-family: inherit; color: var(--text); outline: none; width: 100%;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            border-color: var(--accent); background: var(--bg);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+        .form-group textarea { resize: vertical; min-height: 120px; }
+        .form-group select {
+            cursor: pointer; appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 14px center;
+            background-size: 16px; padding-right: 40px;
+        }
+        .save-status {
+            position: fixed; bottom: 100px; right: 30px;
+            display: flex; align-items: center; gap: 8px;
+            background: var(--card); border: 1px solid var(--border);
+            padding: 10px 18px; border-radius: 50px; font-size: 12px;
+            font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            opacity: 0; transition: all 0.3s; z-index: 500; pointer-events: none;
+        }
+        .save-status.show { opacity: 1; }
+        .save-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+
+        /* INFORMASI */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 50px; }
+        .info-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 32px;
+        }
+        .info-card .icon { font-size: 32px; margin-bottom: 16px; }
+        .info-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .info-card p { font-size: 14px; color: var(--text-muted); }
+        .accordion { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .accordion-item { border-bottom: 1px solid var(--border); }
+        .accordion-item:last-child { border-bottom: none; }
+        .accordion-header {
+            padding: 24px 28px; cursor: pointer; display: flex;
+            justify-content: space-between; align-items: center;
+            font-weight: 600; font-size: 15px;
+        }
+        .accordion-header .icon-toggle { font-size: 22px; color: var(--accent); }
+        .accordion-item.open .icon-toggle { transform: rotate(45deg); }
+        .accordion-content {
+            max-height: 0; overflow: hidden; padding: 0 28px;
+            color: var(--text-muted); font-size: 14px;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+        }
+        .accordion-item.open .accordion-content { max-height: 300px; padding: 0 28px 24px; }
+
+        /* TRANSAKSI */
+        .transactions-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .summary-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+        .summary-card .label { font-size: 13px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; text-transform: uppercase; }
+        .summary-card .value { font-size: 26px; font-weight: 800; }
+        .table-wrapper { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        thead { background: var(--bg-secondary); }
+        th { text-align: left; padding: 18px 24px; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+        td { padding: 20px 24px; font-size: 14px; border-top: 1px solid var(--border); }
+        tbody tr:hover { background: var(--bg-secondary); }
+        .status { display: inline-block; padding: 5px 14px; font-size: 12px; font-weight: 700; border-radius: 50px; }
+        .status-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .status-pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .status-cancel { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .btn-cancel {
+            background: transparent; color: var(--danger); border: 1px solid var(--danger);
+            padding: 6px 14px; border-radius: 50px; font-size: 12px;
+            font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+        .btn-cancel:hover { background: var(--danger); color: white; }
+        .btn-cancel:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-pay-now {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white; border: none; padding: 6px 14px; border-radius: 50px;
+            font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+            margin-right: 6px;
+        }
+        .empty-state { text-align: center; padding: 80px 30px; background: var(--card); border: 1px dashed var(--border); border-radius: var(--radius); }
+        .empty-state .icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
+        .empty-state h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+        .empty-state p { font-size: 15px; color: var(--text-muted); margin-bottom: 25px; }
+        .btn-go-shopping {
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: white; border: none; padding: 14px 32px; border-radius: 50px;
+            font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+
+        /* FOOTER & TOAST */
+        footer { text-align: center; padding: 40px 5%; font-size: 14px; color: var(--text-muted); border-top: 1px solid var(--border); }
+        .toast {
+            position: fixed; bottom: 120px; right: 30px;
+            background: var(--text); color: var(--bg); padding: 16px 24px;
+            border-radius: 50px; font-size: 14px; font-weight: 600;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.4s ease; z-index: 99999;
+            pointer-events: none; max-width: 90%;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) {
+            .auth-card { padding: 36px 26px; }
+            .profile-header { flex-direction: column; text-align: center; padding: 30px 20px; }
+            .profile-meta { text-align: center; }
+            .container { padding: 20px 5% 40px; }
+            .page { padding-top: 90px; }
+            .product-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+            .product-image { height: 160px; }
+            .product-body { padding: 14px; }
+            .product-name { font-size: 14px; }
+            .product-desc { font-size: 12px; }
+            .product-price { font-size: 15px; }
+            .btn-buy, .btn-detail { padding: 10px; font-size: 12px; }
+            .bottom-nav { padding: 6px 12px; gap: 4px; }
+            .nav-btn { width: 46px; height: 46px; }
+            .nav-btn svg { width: 20px; height: 20px; }
+            .nav-btn.center-btn { width: 52px; height: 52px; }
+            .qris-image-box img { width: 200px; height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOADING -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Memuat data...</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-page hidden" id="loginPage">
+        <div class="auth-card">
+            <div class="auth-logo">STUDIO.</div>
+            <h1 class="auth-title">Selamat Datang Kembali</h1>
+            <p class="auth-subtitle">Silakan login untuk mengakses halaman</p>
+            <div class="auth-error" id="loginError"></div>
+            <form class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="email@contoh.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="loginPassword" placeholder="••••••••" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)">
+                            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="auth-btn" id="loginBtn">Login Sekarang</button>
+            </form>
+            <div class="auth-switch">
+                Belum punya akun? <button type="button" onclick="showRegister()">Daftar di sini</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="auth-page hidden" id="registerPage">
+        <div class="auth-card">
+            <div class="auth-logo">STUDIO.</div>
+            <h1 class="auth-title">Buat Akun Baru</h1>
+            <p class="auth-subtitle">Daftar untuk mulai berbelanja di STUDIO.</p>
+            <div class="auth-error" id="registerError"></div>
+            <div class="auth-success" id="registerSuccess"></div>
+            <form class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <label for="regName">Nama Lengkap</label>
+                    <input type="text" id="regName" placeholder="Contoh: Budi Santoso" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <input type="email" id="regEmail" placeholder="email@contoh.com" required>
+                    <div class="field-hint" id="emailHint"></div>
+                </div>
+                <div class="form-group">
+                    <label for="regPhone">Nomor Telepon</label>
+                    <input type="tel" id="regPhone" placeholder="+62 812-3456-7890">
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="regPassword" placeholder="Min. 6 karakter" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('regPassword', this)">
+                            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                    <div class="strength-bar" id="strengthBar"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+                    <div class="field-hint" id="passwordHint">Minimal 6 karakter</div>
+                </div>
+                <div class="form-group">
+                    <label for="regConfirm">Konfirmasi Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="regConfirm" placeholder="Ketik ulang password" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('regConfirm', this)">
+                            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
+                    <div class="field-hint" id="confirmHint"></div>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="regTerms">
+                    <label for="regTerms">Saya setuju dengan <a href="#">Syarat & Ketentuan</a></label>
+                </div>
+                <button type="submit" class="auth-btn" id="registerBtn">Daftar Sekarang</button>
+            </form>
+            <div class="auth-switch">
+                Sudah punya akun? <button type="button" onclick="showLogin()">Login di sini</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" style="display: none;">
+
+        <nav class="top-navbar">
+            <div class="logo">STUDIO.</div>
+            <div class="top-nav-right">
+                <button class="theme-toggle" onclick="toggleTheme()"><span id="themeIcon">🌙</span></button>
+                <div class="user-menu">
+                    <div class="user-avatar" onclick="toggleUserMenu(event)">
+                        <img src="" alt="User" id="navAvatar">
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="dropdown-header">
+                            <div class="name" id="dropdownName">User</div>
+                            <div class="email" id="dropdownEmail">email@contoh.com</div>
+                        </div>
+                        <div class="dropdown-item" onclick="navigate('profil')">👤 Lihat Profil</div>
+                        <div class="dropdown-item danger" onclick="handleLogout()">🚪 Logout</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="bottom-nav-wrapper">
+            <div class="bottom-nav">
+                <button class="nav-btn active" data-page="produk" onclick="navigate('produk', event)">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+                </button>
+                <button class="nav-btn" data-page="transaksi" onclick="navigate('transaksi', event)">
+                    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    <span class="badge" id="trxBadge" style="display:none;">0</span>
+                </button>
+                <button class="nav-btn center-btn" onclick="focusSearch(event)">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+                <button class="nav-btn" data-page="profil" onclick="navigate('profil', event)">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </button>
+                <button class="nav-btn" data-page="informasi" onclick="navigate('informasi', event)">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- PAGE: PRODUK -->
+        <section id="page-produk" class="page active">
+            <div class="container">
+                <h1 class="page-title">Koleksi Produk</h1>
+                <p class="page-subtitle">Bayar dengan QRIS — GoPay, OVO, Dana, ShopeePay, m-Banking.</p>
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="searchInput" placeholder="Cari produk..." oninput="filterProduk()">
+                </div>
+                <div class="filter-chips">
+                    <button class="chip active" data-cat="semua" onclick="setKategori(this)">Semua</button>
+                    <button class="chip" data-cat="aksesoris" onclick="setKategori(this)">Aksesoris</button>
+                    <button class="chip" data-cat="audio" onclick="setKategori(this)">Audio</button>
+                    <button class="chip" data-cat="footwear" onclick="setKategori(this)">Footwear</button>
+                </div>
+                <div class="product-grid" id="productGrid"></div>
+            </div>
+        </section>
+
+        <!-- MODAL DETAIL PRODUK -->
+        <div class="modal-overlay" id="productModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal()">✕</button>
+                <div class="modal-body">
+                    <div class="modal-image"><img id="modalImage" src="" alt="Detail"></div>
+                    <div class="modal-info">
+                        <h2 class="product-name" id="modalName"></h2>
+                        <div class="product-price" id="modalPrice"></div>
+                        <div class="product-stock" id="modalStock"></div>
+                        <div class="modal-desc-title">Deskripsi Produk</div>
+                        <p class="modal-desc" id="modalDesc"></p>
+                        <div class="modal-desc-title">Spesifikasi</div>
+                        <ul class="modal-specs" id="modalSpecs"></ul>
+                        <button class="btn-buy" id="modalBuyBtn" style="margin-top: 24px; padding: 16px;">🛒 Beli Sekarang</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL QRIS -->
+        <div class="modal-overlay" id="qrisModal">
+            <div class="qris-modal-content">
+                <button class="modal-close" onclick="tutupModalQRIS()">✕</button>
+                <div class="qris-body">
+                    <h2>Scan QRIS untuk Bayar</h2>
+                    <p class="subtitle">Buka aplikasi e-wallet atau m-Banking Anda</p>
+
+                    <div class="qris-methods">
+                        <span>GoPay</span><span>OVO</span><span>Dana</span>
+                        <span>ShopeePay</span><span>LinkAja</span><span>m-Banking</span>
+                    </div>
+
+                    <div class="qris-image-box">
+                        <img id="qrisImage" src="" alt="QRIS">
+                    </div>
+
+                    <div class="qris-amount-box">
+                        <div class="qris-amount-label">Total Pembayaran</div>
+                        <div class="qris-amount-value" id="qrisAmount">Rp 0</div>
+                    </div>
+
+                    <div class="qris-status" id="qrisStatus">
+                        <div class="dot-loading"></div>
+                        <span>Menunggu pembayaran...</span>
+                    </div>
+
+                    <div class="qris-timer" id="qrisTimer">
+                        Kedaluwarsa dalam <b id="qrisCountdown">15:00</b>
+                    </div>
+
+                    <button class="qris-cancel-btn" onclick="batalkanQRIS()">
+                        Batalkan Pembayaran
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE: PROFIL -->
+        <section id="page-profil" class="page">
+            <div class="container">
+                <h1 class="page-title">Profil Saya</h1>
+                <p class="page-subtitle">Ubah data sesuai keinginan Anda — tersimpan otomatis.</p>
+
+                <div class="profile-header">
+                    <div class="profile-avatar-wrapper">
+                        <div class="profile-avatar"><img src="" alt="Avatar" id="profileAvatar"></div>
+                        <label for="avatarUpload" class="avatar-edit-btn">
+                            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        </label>
+                        <input type="file" id="avatarUpload" accept="image/*">
+                    </div>
+                    <div class="profile-meta">
+                        <h2 id="headerName">User</h2>
+                        <div class="email-display" id="headerEmail">email@contoh.com</div>
+                        <span class="profile-badge">✦ MEMBER</span>
+                    </div>
+                </div>
+
+                <div class="edit-hint">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    Semua perubahan tersimpan otomatis.
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" id="inputName" placeholder="Nama lengkap" onblur="autoSave('name', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="inputEmail" readonly style="opacity: 0.7;">
+                    </div>
+                    <div class="form-group">
+                        <label>Nomor Telepon</label>
+                        <input type="tel" id="inputPhone" placeholder="+62..." onblur="autoSave('phone', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Jenis Kelamin</label>
+                        <select id="inputGender" onchange="autoSave('gender', this.value)">
+                            <option value="">-- Pilih --</option>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Tentang Saya / Bio <span><span id="bioCount">0</span>/300</span></label>
+                        <textarea id="inputBio" rows="4" maxlength="300" onblur="autoSave('bio', this.value)" oninput="updateBioCount()"></textarea>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE: INFORMASI -->
+        <section id="page-informasi" class="page">
+            <div class="container">
+                <h1 class="page-title">Informasi</h1>
+                <p class="page-subtitle">Pusat bantuan dan pertanyaan yang sering diajukan.</p>
+                <div class="info-grid">
+                    <div class="info-card"><div class="icon">⚡</div><h3>Pembayaran QRIS</h3><p>Bayar instan dengan GoPay, OVO, Dana, ShopeePay, LinkAja, atau m-Banking.</p></div>
+                    <div class="info-card"><div class="icon">🛡️</div><h3>Pembayaran Aman</h3><p>Diproses melalui AustinPay yang terdaftar dan aman dengan standar QRIS Bank Indonesia.</p></div>
+                    <div class="info-card"><div class="icon">💬</div><h3>Dukungan 24/7</h3><p>Tim customer service siap membantu Anda kapan saja.</p></div>
+                </div>
+                <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 30px;">Pertanyaan Umum (FAQ)</h2>
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">Bagaimana cara melakukan pemesanan?<span class="icon-toggle">+</span></div>
+                        <div class="accordion-content">Pilih produk → klik "Beli" → Scan QRIS dengan e-wallet Anda → Selesai. Status otomatis update setelah pembayaran berhasil.</div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">Berapa lama QRIS berlaku?<span class="icon-toggle">+</span></div>
+                        <div class="accordion-content">QRIS berlaku selama 15 menit sejak dibuat. Jika kadaluarsa, transaksi otomatis dibatalkan.</div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">Apakah bisa melakukan pembatalan?<span class="icon-toggle">+</span></div>
+                        <div class="accordion-content">Ya, klik tombol "Batalkan" selama status masih pending (belum dibayar).</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE: TRANSAKSI -->
+        <section id="page-transaksi" class="page">
+            <div class="container">
+                <h1 class="page-title">Transaksi</h1>
+                <p class="page-subtitle">Riwayat pembelian dan status pesanan Anda.</p>
+                <div class="transactions-summary" id="transaksiSummary" style="display: none;">
+                    <div class="summary-card"><div class="label">Total Pesanan</div><div class="value" id="totalCount">0</div></div>
+                    <div class="summary-card"><div class="label">Diproses</div><div class="value" style="color: var(--success);" id="pendingCount">0</div></div>
+                    <div class="summary-card"><div class="label">Pending</div><div class="value" style="color: var(--warning);" id="waitingCount">0</div></div>
+                    <div class="summary-card"><div class="label">Total Belanja</div><div class="value" style="font-size: 20px;" id="totalSpending">Rp 0</div></div>
+                </div>
+                <div class="table-wrapper" id="transaksiTableWrapper" style="display: none;">
+                    <table>
+                        <thead><tr><th>ID</th><th>Produk</th><th>Jumlah</th><th>Tanggal</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+                        <tbody id="transaksiBody"></tbody>
+                    </table>
+                </div>
+                <div class="empty-state" id="transaksiEmpty">
+                    <div class="icon">🛒</div>
+                    <h3>Belum Ada Transaksi</h3>
+                    <p>Anda belum melakukan pembelian. Yuk mulai belanja!</p>
+                    <button class="btn-go-shopping" onclick="navigate('produk')">🛍️ Mulai Belanja</button>
+                </div>
+            </div>
+        </section>
+
+        <footer>&copy; 2026 STUDIO. Powered by Supabase & AustinPay.</footer>
+    </div>
+
+    <div class="save-status" id="saveStatus"><span class="dot"></span><span>Tersimpan</span></div>
+    <div class="toast" id="toast"></div>
+
+    <!-- ============ JAVASCRIPT ============ -->
+    <script>
+        /* ==================================================
+           ⚙️ KONFIGURASI — GANTI DENGAN MILIK ANDA!
+        ================================================== */
+        const SUPABASE_URL = 'https://xxxxxxxxxxxxx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.XXXXXX...';
+
+        let db = null;
+        let supabaseReady = false;
+        let austinpayReady = false;
+
+        try {
+            if (!SUPABASE_URL.includes('xxxxx') && !SUPABASE_ANON_KEY.includes('XXXXXX')) {
+                const { createClient } = supabase;
+                db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                supabaseReady = true;
+                austinpayReady = true;
+                console.log('✅ Supabase & AustinPay siap');
+            } else {
+                console.warn('⚠️ Supabase belum dikonfigurasi. Mode lokal aktif.');
+            }
+        } catch (err) {
+            console.error('❌ Init error:', err);
+        }
+
+        /* ==================================================
+           STATE
+        ================================================== */
+        let currentUser = null;
+        let currentProfile = null;
+        let PRODUK = [];
+        let currentKategori = 'semua';
+        let currentSearch = '';
+        let isDemoMode = !supabaseReady;
+        let pollingInterval = null;
+        let countdownInterval = null;
+        let currentQrisTrx = null;
+
+        /* ==================================================
+           FALLBACK PRODUK
+        ================================================== */
+        const PRODUK_FALLBACK = [
+            { id: 'P001', nama: 'Jam Tangan Minimalis', kategori: 'aksesoris', harga: 850000, stok: 15, gambar: 'images/product1.jpg',
+              deskripsi: 'Jam tangan dengan desain minimalis yang elegan. Cocok untuk gaya formal maupun kasual sehari-hari.',
+              spesifikasi: { 'Brand': 'STUDIO Time', 'Material': 'Stainless Steel & Kulit', 'Diameter': '40mm', 'Garansi': '1 Tahun' } },
+            { id: 'P002', nama: 'Headphone Premium', kategori: 'audio', harga: 1200000, stok: 8, gambar: 'images/product2.jpg',
+              deskripsi: 'Headphone premium dengan noise cancelling aktif. Baterai tahan hingga 30 jam pemakaian.',
+              spesifikasi: { 'Brand': 'STUDIO Audio', 'Tipe': 'Over-Ear Wireless', 'Bluetooth': '5.0', 'Garansi': '1 Tahun' } },
+            { id: 'P003', nama: 'Sepatu Sneakers', kategori: 'footwear', harga: 1500000, stok: 5, gambar: 'images/product3.jpg',
+              deskripsi: 'Sepatu sneakers dengan desain modern dan bahan premium. Sol karet anti-slip.',
+              spesifikasi: { 'Brand': 'STUDIO Footwear', 'Material': 'Kulit Sintetis', 'Ukuran': '39 - 44', 'Garansi': '6 Bulan' } }
+        ];
+
+        const DEMO_EMAIL = 'admin@studio.com';
+        const DEMO_PASSWORD = 'admin123';
+
+        /* ==================================================
+           INIT
+        ================================================== */
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadProdukFromDB();
+
+            if (supabaseReady) {
+                try {
+                    const { data: { session } } = await db.auth.getSession();
+                    if (session) {
+                        currentUser = session.user;
+                        await onUserLoggedIn();
+                    } else {
+                        showLoginPage();
+                    }
+                    db.auth.onAuthStateChange((event) => {
+                        if (event === 'SIGNED_OUT') {
+                            currentUser = null; currentProfile = null;
+                            showLoginPage();
+                        }
+                    });
+                } catch (err) {
+                    console.error('Session error:', err);
+                    showLoginPage();
+                }
+            } else {
+                if (localStorage.getItem('demo_login') === 'true') {
+                    currentUser = { id: 'demo-user', email: DEMO_EMAIL };
+                    await onUserLoggedIn();
+                } else {
+                    showLoginPage();
+                }
+            }
+
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+            document.getElementById('regEmail').addEventListener('input', validateEmailLive);
+            document.getElementById('regPassword').addEventListener('input', () => {
+                validatePasswordLive();
+                if (document.getElementById('regConfirm').value) validateConfirmLive();
+            });
+            document.getElementById('regConfirm').addEventListener('input', validateConfirmLive);
+
+            setTimeout(() => {
+                const el = document.getElementById('loadingOverlay');
+                el.classList.add('hidden');
+                setTimeout(() => el.style.display = 'none', 400);
+            }, 500);
+        });
+
+        function showLoadingOverlay(text = 'Memuat...') {
+            const el = document.getElementById('loadingOverlay');
+            document.querySelector('.loading-text').textContent = text;
+            el.style.display = 'flex';
+            el.classList.remove('hidden');
+        }
+        function hideLoadingOverlay() {
+            const el = document.getElementById('loadingOverlay');
+            el.classList.add('hidden');
+            setTimeout(() => el.style.display = 'none', 400);
+        }
+
+        /* ==================================================
+           LOAD PRODUK
+        ================================================== */
+        async function loadProdukFromDB() {
+            if (!supabaseReady || !db) {
+                PRODUK = PRODUK_FALLBACK;
+                renderProduk();
+                return;
+            }
+            try {
+                const { data, error } = await db.from('products').select('*').order('id');
+                if (error) throw error;
+                PRODUK = (data && data.length > 0) ? data : PRODUK_FALLBACK;
+                renderProduk();
+            } catch (err) {
+                console.warn('Fallback produk:', err.message);
+                PRODUK = PRODUK_FALLBACK;
+                renderProduk();
+            }
+        }
+
+        /* ==================================================
+           LOGIN
+        ================================================== */
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+            const errorBox = document.getElementById('loginError');
+            const btn = document.getElementById('loginBtn');
+
+            errorBox.classList.remove('show');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="btn-spinner"></div> Login...';
+
+            try {
+                if (isDemoMode || !supabaseReady) {
+                    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+                        localStorage.setItem('demo_login', 'true');
+                        currentUser = { id: 'demo-user', email: DEMO_EMAIL };
+                        await onUserLoggedIn();
+                        showToast('✅ Login berhasil (mode lokal)');
+                        document.getElementById('loginForm').reset();
+                    } else {
+                        throw new Error('Email atau password salah!');
+                    }
+                    return;
+                }
+
+                const { data, error } = await db.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                currentUser = data.user;
+                await onUserLoggedIn();
+                showToast('✅ Login berhasil!');
+                document.getElementById('loginForm').reset();
+            } catch (err) {
+                console.error('Login error:', err);
+                let msg = err.message || 'Login gagal';
+                if (msg.includes('Invalid login')) msg = 'Email atau password salah!';
+                errorBox.textContent = '❌ ' + msg;
+                errorBox.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Login Sekarang';
+            }
+        }
+
+        /* ==================================================
+           REGISTER
+        ================================================== */
+        async function handleRegister(event) {
+            event.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim().toLowerCase();
+            const phone = document.getElementById('regPhone').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirm').value;
+            const terms = document.getElementById('regTerms').checked;
+            const errorBox = document.getElementById('registerError');
+            const successBox = document.getElementById('registerSuccess');
+            const btn = document.getElementById('registerBtn');
+
+            errorBox.classList.remove('show');
+            successBox.classList.remove('show');
+
+            if (!name || name.length < 3) return showRegError('❌ Nama minimal 3 karakter.');
+            if (!isValidEmail(email)) return showRegError('❌ Format email tidak valid.');
+            if (password.length < 6) return showRegError('❌ Password minimal 6 karakter.');
+            if (password !== confirm) return showRegError('❌ Konfirmasi password tidak cocok.');
+            if (!terms) return showRegError('❌ Setujui Syarat & Ketentuan.');
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="btn-spinner"></div> Mendaftar...';
+
+            try {
+                if (isDemoMode || !supabaseReady) {
+                    const users = JSON.parse(localStorage.getItem('demo_users') || '[]');
+                    if (users.some(u => u.email === email)) throw new Error('Email sudah terdaftar');
+                    users.push({ id: 'user-' + Date.now(), name, email, phone, password });
+                    localStorage.setItem('demo_users', JSON.stringify(users));
+                    successBox.textContent = '✅ Akun dibuat! Silakan login.';
+                    successBox.classList.add('show');
+                    document.getElementById('registerForm').reset();
+                    setTimeout(() => { showLogin(); document.getElementById('loginEmail').value = email; }, 2000);
+                    return;
+                }
+
+                const { data, error } = await db.auth.signUp({
+                    email, password,
+                    options: {
+                        data: { name, phone },
+                        emailRedirectTo: window.location.origin
+                    }
+                });
+                if (error) throw error;
+
+                successBox.textContent = '✅ Pendaftaran berhasil! Cek email untuk verifikasi.';
+                successBox.classList.add('show');
+                showToast('🎉 Akun berhasil dibuat!');
+                document.getElementById('registerForm').reset();
+                document.getElementById('strengthBar').className = 'strength-bar';
+                setTimeout(() => { showLogin(); document.getElementById('loginEmail').value = email; }, 2500);
+            } catch (err) {
+                console.error('Register error:', err);
+                showRegError('❌ ' + (err.message || 'Gagal daftar'));
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Daftar Sekarang';
+            }
+        }
+
+        function showRegError(msg) {
+            const eb = document.getElementById('registerError');
+            eb.textContent = msg;
+            eb.classList.add('show');
+            return false;
+        }
+
+        async function onUserLoggedIn() {
+            await loadProfileFromDB();
+            await loadTransaksiFromDB();
+            await loadProdukFromDB();
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.add('hidden');
+            document.getElementById('mainApp').style.display = 'block';
+        }
+
+        async function handleLogout() {
+            if (!confirm('Yakin ingin logout?')) return;
+            try {
+                if (supabaseReady && db) await db.auth.signOut();
+                localStorage.removeItem('demo_login');
+                currentUser = null; currentProfile = null;
+                document.getElementById('userDropdown').classList.remove('show');
+                document.getElementById('mainApp').style.display = 'none';
+                showLoginPage();
+                showToast('👋 Logout berhasil.');
+            } catch (err) { console.error(err); }
+        }
+
+        function showLoginPage() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('registerPage').classList.add('hidden');
+            document.getElementById('mainApp').style.display = 'none';
+        }
+        function showLogin() { showLoginPage(); }
+        function showRegister() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.remove('hidden');
+        }
+
+        /* ==================================================
+           LOAD PROFIL
+        ================================================== */
+        async function loadProfileFromDB() {
+            try {
+                if (isDemoMode || !supabaseReady) {
+                    const saved = JSON.parse(localStorage.getItem('demo_profile') || '{}');
+                    currentProfile = {
+                        id: currentUser.id, name: saved.name || 'Budi Santoso',
+                        email: currentUser.email, phone: saved.phone || '',
+                        gender: saved.gender || '', bio: saved.bio || '',
+                        avatar_url: saved.avatar_url || ''
+                    };
+                    applyProfileToUI();
+                    return;
+                }
+                const { data, error } = await db.from('profiles').select('*').eq('id', currentUser.id).maybeSingle();
+                if (error && error.code !== 'PGRST116') throw error;
+                if (!data) {
+                    const newProfile = {
+                        id: currentUser.id,
+                        name: currentUser.user_metadata?.name || 'User',
+                        email: currentUser.email,
+                        phone: currentUser.user_metadata?.phone || '',
+                        gender: '', bio: '', avatar_url: ''
+                    };
+                    await db.from('profiles').insert(newProfile);
+                    currentProfile = newProfile;
+                } else {
+                    currentProfile = data;
+                }
+                applyProfileToUI();
+            } catch (err) {
+                console.error('Load profile error:', err);
+                currentProfile = {
+                    id: currentUser.id, name: 'User', email: currentUser.email,
+                    phone: '', gender: '', bio: '', avatar_url: ''
+                };
+                applyProfileToUI();
+            }
+        }
+
+        function applyProfileToUI() {
+            if (!currentProfile) return;
+            const p = currentProfile;
+            document.getElementById('inputName').value = p.name || '';
+            document.getElementById('inputEmail').value = p.email || currentUser.email;
+            document.getElementById('inputPhone').value = p.phone || '';
+            document.getElementById('inputGender').value = p.gender || '';
+            document.getElementById('inputBio').value = p.bio || '';
+            updateBioCount();
+            updateHeaderDisplay();
+            updateAvatar();
+        }
+
+        function updateHeaderDisplay() {
+            if (!currentProfile) return;
+            const name = currentProfile.name || 'User';
+            const email = currentProfile.email || currentUser?.email || '';
+            document.getElementById('headerName').textContent = name;
+            document.getElementById('headerEmail').textContent = email;
+            document.getElementById('dropdownName').textContent = name;
+            document.getElementById('dropdownEmail').textContent = email;
+        }
+
+        function updateAvatar() {
+            const nav = document.getElementById('navAvatar');
+            const prof = document.getElementById('profileAvatar');
+            if (currentProfile?.avatar_url) {
+                nav.src = currentProfile.avatar_url;
+                prof.src = currentProfile.avatar_url;
+            } else {
+                const name = currentProfile?.name || currentUser?.email || 'U';
+                const initial = name.charAt(0).toUpperCase();
+                const colors = ['6366f1', 'ec4899', '10b981', 'f59e0b', 'ef4444'];
+                const color = colors[initial.charCodeAt(0) % colors.length];
+                const defaultAvatar = `https://via.placeholder.com/200/${color}/ffffff?text=${initial}`;
+                nav.src = defaultAvatar;
+                prof.src = defaultAvatar;
+            }
+        }
+
+        async function autoSave(field, value) {
+            if (!currentUser || !currentProfile) return;
+            currentProfile[field] = value;
+            showSaveStatus();
+            try {
+                if (isDemoMode || !supabaseReady) {
+                    const saved = JSON.parse(localStorage.getItem('demo_profile') || '{}');
+                    saved[field] = value;
+                    localStorage.setItem('demo_profile', JSON.stringify(saved));
+                    updateHeaderDisplay();
+                    return;
+                }
+                const { error } = await db.from('profiles')
+                    .update({ [field]: value, updated_at: new Date().toISOString() })
+                    .eq('id', currentUser.id);
+                if (error) throw error;
+                updateHeaderDisplay();
+            } catch (err) {
+                console.error('AutoSave error:', err);
+                showToast('❌ Gagal menyimpan');
+            }
+        }
+
+        document.getElementById('avatarUpload').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { showToast('❌ Maks 2MB'); return; }
+            if (!file.type.startsWith('image/')) { showToast('❌ Harus gambar'); return; }
+
+            showLoadingOverlay('Upload foto...');
+            try {
+                if (isDemoMode || !supabaseReady) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const saved = JSON.parse(localStorage.getItem('demo_profile') || '{}');
+                        saved.avatar_url = ev.target.result;
+                        localStorage.setItem('demo_profile', JSON.stringify(saved));
+                        currentProfile.avatar_url = ev.target.result;
+                        updateAvatar();
+                        hideLoadingOverlay();
+                        showToast('✅ Foto profil diubah!');
+                    };
+                    reader.readAsDataURL(file);
+                    return;
+                }
+
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
+                const filePath = `avatars/${fileName}`;
+
+                const { error: upErr } = await db.storage.from('avatars').upload(filePath, file, { upsert: true });
+                if (upErr) throw upErr;
+
+                const { data: { publicUrl } } = db.storage.from('avatars').getPublicUrl(filePath);
+                await db.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.id);
+                currentProfile.avatar_url = publicUrl;
+                updateAvatar();
+                showToast('✅ Foto profil berhasil diubah!');
+            } catch (err) {
+                console.error('Upload error:', err);
+                showToast('❌ Upload gagal: ' + err.message);
+            } finally {
+                hideLoadingOverlay();
+            }
+        });
+
+        /* ==================================================
+           TRANSAKSI
+        ================================================== */
+        async function loadTransaksiFromDB() {
+            try {
+                if (isDemoMode || !supabaseReady) {
+                    const trx = JSON.parse(localStorage.getItem('demo_transaksi') || '[]');
+                    renderTransaksi(trx);
+                    return;
+                }
+                const { data, error } = await db.from('transactions')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                renderTransaksi(data || []);
+            } catch (err) {
+                console.error('Load transaksi error:', err);
+                renderTransaksi([]);
+            }
+        }
+
+        function renderTransaksi(transaksi) {
+            const emptyEl = document.getElementById('transaksiEmpty');
+            const summaryEl = document.getElementById('transaksiSummary');
+            const tableEl = document.getElementById('transaksiTableWrapper');
+            const tbody = document.getElementById('transaksiBody');
+            const badge = document.getElementById('trxBadge');
+
+            if (!transaksi || transaksi.length === 0) {
+                emptyEl.style.display = 'block';
+                summaryEl.style.display = 'none';
+                tableEl.style.display = 'none';
+                if (badge) badge.style.display = 'none';
+                return;
+            }
+
+            emptyEl.style.display = 'none';
+            summaryEl.style.display = 'grid';
+            tableEl.style.display = 'block';
+
+            const total = transaksi.length;
+            const success = transaksi.filter(t => t.status === 'Diproses' || t.status === 'Selesai').length;
+            const pending = transaksi.filter(t => t.status === 'pending').length;
+            const spending = transaksi
+                .filter(t => t.status === 'Diproses' || t.status === 'Selesai')
+                .reduce((sum, t) => sum + (t.harga * t.jumlah), 0);
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('pendingCount').textContent = success;
+            document.getElementById('waitingCount').textContent = pending;
+            document.getElementById('totalSpending').textContent = 'Rp ' + spending.toLocaleString('id-ID');
+
+            if (badge) {
+                if (pending > 0) { badge.textContent = pending; badge.style.display = 'flex'; }
+                else badge.style.display = 'none';
+            }
+
+            tbody.innerHTML = transaksi.map(t => {
+                let statusClass = 'status-pending';
+                let statusLabel = t.status;
+                if (t.status === 'Dibatalkan' || t.status === 'Expired' || t.status === 'Gagal') {
+                    statusClass = 'status-cancel';
+                } else if (t.status === 'Diproses' || t.status === 'Selesai') {
+                    statusClass = 'status-success';
+                    statusLabel = 'Berhasil';
+                } else if (t.status === 'pending') {
+                    statusClass = 'status-pending';
+                    statusLabel = 'Menunggu Bayar';
+                }
+
+                const canCancel = t.status === 'pending';
+                const canPay = t.status === 'pending';
+                const tanggal = t.created_at ? new Date(t.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                const idStr = typeof t.id === 'string' ? t.id.substring(0, 8).toUpperCase() : String(t.id);
+
+                return `<tr>
+                    <td>#${idStr}</td>
+                    <td>${t.product_name}</td>
+                    <td>${t.jumlah}x</td>
+                    <td>${tanggal}</td>
+                    <td>Rp ${(t.harga * t.jumlah).toLocaleString('id-ID')}</td>
+                    <td><span class="status ${statusClass}">${statusLabel}</span></td>
+                    <td>
+                        ${canPay ? `<button class="btn-pay-now" onclick="lanjutkanPembayaran('${t.id}')">Bayar</button>` : ''}
+                        <button class="btn-cancel" onclick="batalkanTransaksi('${t.id}')" ${canCancel ? '' : 'disabled'}>${canCancel ? 'Batal' : '—'}</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        /* ==================================================
+           🆕 BELI PRODUK — DENGAN QRIS
+        ================================================== */
+        async function beliProduk(produkId) {
+            const produk = PRODUK.find(p => p.id === produkId);
+            if (!produk) return;
+            if (produk.stok === 0) { showToast('❌ Stok habis.'); return; }
+
+            if (!confirm(`Beli "${produk.nama}" seharga Rp ${produk.harga.toLocaleString('id-ID')}?\n\nAnda akan diarahkan ke pembayaran QRIS.`)) return;
+
+            // DEMO MODE: langsung sukses tanpa QRIS
+            if (isDemoMode || !supabaseReady) {
+                if (!confirm('⚠️ Mode lokal: Pembayaran akan disimulasikan sukses. Lanjutkan?')) return;
+                
+                const trx = JSON.parse(localStorage.getItem('demo_transaksi') || '[]');
+                trx.unshift({
+                    id: 'TRX-' + Date.now(),
+                    product_id: produk.id,
+                    product_name: produk.nama,
+                    harga: produk.harga,
+                    jumlah: 1,
+                    status: 'Diproses',
+                    created_at: new Date().toISOString()
+                });
+                localStorage.setItem('demo_transaksi', JSON.stringify(trx));
+                showToast(`✅ "${produk.nama}" berhasil dibeli!`);
+                await loadTransaksiFromDB();
+                setTimeout(() => navigate('transaksi'), 500);
+                return;
+            }
+
+            // SUPABASE + AUSTINPAY
+            showLoadingOverlay('Membuat QRIS...');
+
+            try {
+                const { data: { session } } = await db.auth.getSession();
+                if (!session) throw new Error('Sesi habis, login ulang');
+
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/create-deposit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        product_id: produk.id,
+                        product_name: produk.nama,
+                        harga: produk.harga,
+                        jumlah: 1
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || 'Gagal membuat QRIS');
+                }
+
+                hideLoadingOverlay();
+                tampilkanModalQRIS(data.transaction);
+
+            } catch (err) {
+                hideLoadingOverlay();
+                console.error('Beli error:', err);
+                showToast('❌ ' + err.message);
+            }
+        }
+
+        /* ==================================================
+           🆕 TAMPILKAN MODAL QRIS
+        ================================================== */
+        function tampilkanModalQRIS(trx) {
+            currentQrisTrx = trx;
+
+            document.getElementById('qrisImage').src = trx.qr_image_url ||
+                `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trx.qr_string || 'QRIS-TEST')}`;
+            document.getElementById('qrisAmount').textContent = 'Rp ' + (trx.harga * trx.jumlah).toLocaleString('id-ID');
+
+            document.getElementById('qrisStatus').innerHTML = `
+                <div class="dot-loading"></div>
+                <span>Menunggu pembayaran...</span>
+            `;
+            document.getElementById('qrisStatus').className = 'qris-status';
+            document.getElementById('qrisTimer').style.display = 'block';
+
+            // Mulai countdown
+            mulaiCountdown(trx.expired_at);
+            // Mulai polling
+            mulaiPolling(trx.id);
+
+            document.getElementById('qrisModal').classList.add('show');
+        }
+
+        function tutupModalQRIS() {
+            document.getElementById('qrisModal').classList.remove('show');
+            if (pollingInterval) clearInterval(pollingInterval);
+            if (countdownInterval) clearInterval(countdownInterval);
+            currentQrisTrx = null;
+        }
+
+        async function mulaiPolling(trxId) {
+            if (pollingInterval) clearInterval(pollingInterval);
+
+            pollingInterval = setInterval(async () => {
+                try {
+                    const { data: { session } } = await db.auth.getSession();
+                    if (!session) return;
+
+                    const res = await fetch(`${SUPABASE_URL}/functions/v1/check-deposit`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({ transaction_id: trxId })
+                    });
+
+                    const data = await res.json();
+                    if (!data.success) return;
+
+                    const trx = data.transaction;
+
+                    if (trx.status === 'Diproses') {
+                        clearInterval(pollingInterval);
+                        if (countdownInterval) clearInterval(countdownInterval);
+                        const st = document.getElementById('qrisStatus');
+                        st.className = 'qris-status success';
+                        st.innerHTML = '✅ Pembayaran Berhasil!';
+                        document.getElementById('qrisTimer').style.display = 'none';
+                        showToast('✅ Pembayaran berhasil!');
+                        setTimeout(() => {
+                            tutupModalQRIS();
+                            loadTransaksiFromDB();
+                            navigate('transaksi');
+                        }, 2000);
+                    } else if (trx.status === 'Expired') {
+                        clearInterval(pollingInterval);
+                        const st = document.getElementById('qrisStatus');
+                        st.className = 'qris-status expired';
+                        st.innerHTML = '⏰ QR Code Kadaluarsa';
+                        document.getElementById('qrisTimer').style.display = 'none';
+                        showToast('⏰ QR sudah expired');
+                    } else if (trx.status === 'Dibatalkan') {
+                        clearInterval(pollingInterval);
+                        tutupModalQRIS();
+                    }
+                } catch (err) {
+                    console.error('Polling error:', err);
+                }
+            }, 3000);
+        }
+
+        function mulaiCountdown(expiredAt) {
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            const expired = new Date(expiredAt).getTime();
+
+            const update = () => {
+                const diff = expired - Date.now();
+                if (diff <= 0) {
+                    document.getElementById('qrisCountdown').textContent = '00:00';
+                    clearInterval(countdownInterval);
+                    return;
+                }
+                const min = Math.floor(diff / 60000);
+                const sec = Math.floor((diff % 60000) / 1000);
+                const el = document.getElementById('qrisCountdown');
+                if (el) el.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+            };
+            update();
+            countdownInterval = setInterval(update, 1000);
+        }
+
+        async function batalkanQRIS() {
+            if (!currentQrisTrx) return;
+            if (!confirm('Yakin ingin membatalkan pembayaran ini?')) return;
+
+            try {
+                const { data: { session } } = await db.auth.getSession();
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/cancel-deposit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ transaction_id: currentQrisTrx.id })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('❌ Pembayaran dibatalkan');
+                    tutupModalQRIS();
+                    loadTransaksiFromDB();
+                } else {
+                    showToast('Gagal: ' + data.error);
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message);
+            }
+        }
+
+        async function lanjutkanPembayaran(trxId) {
+            // Ambil transaksi dari DB
+            try {
+                if (isDemoMode) return;
+                const { data, error } = await db.from('transactions').select('*').eq('id', trxId).single();
+                if (error || !data) throw new Error('Transaksi tidak ditemukan');
+                tampilkanModalQRIS(data);
+            } catch (err) {
+                showToast('❌ ' + err.message);
+            }
+        }
+
+        async function batalkanTransaksi(id) {
+            if (!confirm('Yakin ingin membatalkan transaksi ini?')) return;
+
+            try {
+                if (isDemoMode || !supabaseReady) {
+                    const trx = JSON.parse(localStorage.getItem('demo_transaksi') || '[]');
+                    const idx = trx.findIndex(t => t.id === id);
+                    if (idx !== -1) trx[idx].status = 'Dibatalkan';
+                    localStorage.setItem('demo_transaksi', JSON.stringify(trx));
+                    showToast('❌ Dibatalkan.');
+                    await loadTransaksiFromDB();
+                    return;
+                }
+
+                const { data: { session } } = await db.auth.getSession();
+                const res = await fetch(`${SUPABASE_URL}/functions/v1/cancel-deposit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ transaction_id: id })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('❌ Transaksi dibatalkan.');
+                    await loadTransaksiFromDB();
+                } else {
+                    showToast('Gagal: ' + data.error);
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message);
+            }
+        }
+
+        /* ==================================================
+           RENDER PRODUK
+        ================================================== */
+        function renderProduk() {
+            const grid = document.getElementById('productGrid');
+            if (!grid) return;
+
+            let filtered = PRODUK.filter(p => {
+                const matchKat = currentKategori === 'semua' || p.kategori === currentKategori;
+                const matchSearch = currentSearch === '' ||
+                    (p.nama || '').toLowerCase().includes(currentSearch.toLowerCase()) ||
+                    (p.deskripsi || '').toLowerCase().includes(currentSearch.toLowerCase());
+                return matchKat && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><div class="icon">🔍</div><h3>Produk Tidak Ditemukan</h3><p>Coba kata kunci lain.</p></div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => {
+                let stockClass = '', stockText = `Stok: ${p.stok}`, badgeClass = '', badgeText = '';
+                if (p.stok === 0) { stockClass = 'empty'; stockText = 'Stok Habis'; badgeClass = 'empty'; badgeText = 'SOLD OUT'; }
+                else if (p.stok <= 5) { stockClass = 'low'; badgeClass = 'low'; badgeText = 'LIMITED'; }
+
+                return `
+                    <div class="product-item">
+                        <div class="product-image">
+                            <img src="${p.gambar}" alt="${p.nama}" onerror="this.src='https://via.placeholder.com/500x260/f4f4f5/888888?text=${encodeURIComponent(p.nama)}'">
+                            ${badgeText ? `<div class="product-badge ${badgeClass}">${badgeText}</div>` : ''}
+                        </div>
+                        <div class="product-body">
+                            <div class="product-category">${p.kategori || ''}</div>
+                            <h3 class="product-name">${p.nama}</h3>
+                            <p class="product-desc">${p.deskripsi || ''}</p>
+                            <div class="product-footer">
+                                <div class="product-price">Rp ${p.harga.toLocaleString('id-ID')}</div>
+                                <div class="product-stock ${stockClass}">${stockText}</div>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-detail" onclick="openModal('${p.id}')">Detail</button>
+                                <button class="btn-buy" onclick="beliProduk('${p.id}')" ${p.stok === 0 ? 'disabled' : ''}>${p.stok === 0 ? 'Habis' : '🛒 Beli'}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setKategori(el) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            currentKategori = el.dataset.cat;
+            renderProduk();
+        }
+
+        function filterProduk() {
+            currentSearch = document.getElementById('searchInput').value;
+            renderProduk();
+        }
+
+        function focusSearch(event) {
+            if (event) createRipple(event.currentTarget, event);
+            navigate('produk', null);
+            setTimeout(() => {
+                const input = document.getElementById('searchInput');
+                if (input) { input.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => input.focus(), 400); }
+            }, 100);
+        }
+
+        /* ==================================================
+           MODAL DETAIL
+        ================================================== */
+        function openModal(id) {
+            const p = PRODUK.find(x => x.id === id);
+            if (!p) return;
+            document.getElementById('modalImage').src = p.gambar;
+            document.getElementById('modalImage').onerror = function() { this.src = 'https://via.placeholder.com/500x400/f4f4f5/888888?text=' + encodeURIComponent(p.nama); };
+            document.getElementById('modalName').textContent = p.nama;
+            document.getElementById('modalPrice').textContent = 'Rp ' + p.harga.toLocaleString('id-ID');
+            document.getElementById('modalDesc').textContent = p.deskripsi || '';
+            const stockEl = document.getElementById('modalStock');
+            stockEl.textContent = p.stok === 0 ? '❌ Stok Habis' : `✓ Tersedia (${p.stok} unit)`;
+            stockEl.style.background = p.stok === 0 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+            stockEl.style.color = p.stok === 0 ? 'var(--danger)' : 'var(--success)';
+            document.getElementById('modalSpecs').innerHTML = Object.entries(p.spesifikasi || {}).map(([k, v]) => `<li><strong>${k}</strong> ${v}</li>`).join('');
+            const buyBtn = document.getElementById('modalBuyBtn');
+            buyBtn.disabled = p.stok === 0;
+            buyBtn.textContent = p.stok === 0 ? 'Stok Habis' : '🛒 Beli dengan QRIS';
+            buyBtn.onclick = () => { closeModal(); beliProduk(p.id); };
+            document.getElementById('productModal').classList.add('show');
+        }
+        function closeModal() { document.getElementById('productModal').classList.remove('show'); }
+        document.getElementById('productModal').addEventListener('click', (e) => { if (e.target.id === 'productModal') closeModal(); });
+        document.getElementById('qrisModal').addEventListener('click', (e) => {
+            if (e.target.id === 'qrisModal') {
+                if (confirm('Tutup QRIS? Pembayaran akan tetap diproses.')) tutupModalQRIS();
+            }
+        });
+
+        /* ==================================================
+           NAVIGASI
+        ================================================== */
+        function navigate(pageName, event) {
+            if (event && event.currentTarget) createRipple(event.currentTarget, event);
+            if (!currentUser) { showLoginPage(); return; }
+
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById('page-' + pageName);
+            if (target) { target.classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.page === pageName);
+            });
+
+            if (pageName === 'transaksi') loadTransaksiFromDB();
+            if (pageName === 'profil') loadProfileFromDB();
+        }
+
+        function createRipple(button, event) {
+            if (!button || !event) return;
+            const circle = document.createElement('span');
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            const rect = button.getBoundingClientRect();
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - rect.left - radius}px`;
+            circle.style.top = `${event.clientY - rect.top - radius}px`;
+            circle.classList.add('ripple');
+            const existing = button.querySelector('.ripple');
+            if (existing) existing.remove();
+            button.appendChild(circle);
+            setTimeout(() => circle.remove(), 600);
+        }
+
+        /* ==================================================
+           HELPERS
+        ================================================== */
+        function toggleUserMenu(event) {
+            event.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('show');
+        }
+        document.addEventListener('click', (e) => {
+            const dd = document.getElementById('userDropdown');
+            const av = e.target.closest('.user-avatar');
+            if (!av && dd) dd.classList.remove('show');
+        });
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme'); icon.textContent = '🌙';
+            } else {
+                html.setAttribute('data-theme', 'dark'); icon.textContent = '☀️';
+            }
+        }
+
+        function toggleAccordion(header) {
+            const item = header.parentElement;
+            const isOpen = item.classList.contains('open');
+            document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('open'));
+            if (!isOpen) item.classList.add('open');
+        }
+
+        function updateBioCount() {
+            const bio = document.getElementById('inputBio').value;
+            document.getElementById('bioCount').textContent = bio.length;
+        }
+
+        function showSaveStatus() {
+            const st = document.getElementById('saveStatus');
+            st.classList.add('show');
+            clearTimeout(window.saveStatusTimeout);
+            window.saveStatusTimeout = setTimeout(() => st.classList.remove('show'), 1500);
+        }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const isPwd = input.type === 'password';
+            input.type = isPwd ? 'text' : 'password';
+            btn.innerHTML = isPwd
+                ? `<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
+                : `<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        }
+
+        function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+        function validateEmailLive() {
+            const email = document.getElementById('regEmail').value.trim().toLowerCase();
+            const hint = document.getElementById('emailHint');
+            if (!email) { hint.textContent = ''; hint.className = 'field-hint'; return; }
+            if (!isValidEmail(email)) { hint.textContent = '❌ Email tidak valid'; hint.className = 'field-hint error'; return; }
+            hint.textContent = '✓ Email valid'; hint.className = 'field-hint success';
+        }
+        function validatePasswordLive() {
+            const pwd = document.getElementById('regPassword').value;
+            const hint = document.getElementById('passwordHint');
+            const bar = document.getElementById('strengthBar');
+            if (!pwd) { hint.textContent = 'Min. 6 karakter'; hint.className = 'field-hint'; bar.className = 'strength-bar'; return; }
+            if (pwd.length < 6) { hint.textContent = '❌ Minimal 6 karakter'; hint.className = 'field-hint error'; bar.className = 'strength-bar weak'; return; }
+            let s = 0;
+            if (pwd.length >= 8) s++;
+            if (/[A-Z]/.test(pwd)) s++;
+            if (/[0-9]/.test(pwd)) s++;
+            if (/[^A-Za-z0-9]/.test(pwd)) s++;
+            if (s <= 1) { bar.className = 'strength-bar weak'; hint.textContent = 'Lemah'; }
+            else if (s <= 2) { bar.className = 'strength-bar medium'; hint.textContent = 'Sedang'; }
+            else { bar.className = 'strength-bar strong'; hint.textContent = '✓ Kuat'; }
+            hint.className = 'field-hint ' + (s <= 1 ? 'error' : 'success');
+        }
+        function validateConfirmLive() {
+            const pwd = document.getElementById('regPassword').value;
+            const cfm = document.getElementById('regConfirm').value;
+            const hint = document.getElementById('confirmHint');
+            if (!cfm) { hint.textContent = ''; hint.className = 'field-hint'; return; }
+            if (pwd !== cfm) { hint.textContent = '❌ Tidak cocok'; hint.className = 'field-hint error'; }
+            else { hint.textContent = '✓ Cocok'; hint.className = 'field-hint success'; }
+        }
+
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+
+</body>
+</html>
