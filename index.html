@@ -1273,7 +1273,7 @@ async function manualCheckTx(txId, fromQris) {
 
         const s = tx.status;
         if (s === 'Diproses' || s === 'Selesai') {
-            toast('✅ Pembayaran BERHASIL');
+            toast('Pembayaran BERHASIL');
             if (fromQris) {
                 stopPolling(); stopCountdown();
                 document.getElementById('qrisStatus').className = 'qris-status ok';
@@ -1291,7 +1291,7 @@ async function manualCheckTx(txId, fromQris) {
                 await loadTransactions();
             }
         } else if (s === 'Expired') {
-            toast('⏰ QR Code Kadaluarsa');
+            toast('QR Code Kadaluarsa');
             if (fromQris) {
                 stopPolling(); stopCountdown();
                 document.getElementById('qrisStatus').className = 'qris-status expired';
@@ -1300,11 +1300,11 @@ async function manualCheckTx(txId, fromQris) {
             }
             await loadTransactions();
         } else if (s === 'Dibatalkan') {
-            toast('❌ Transaksi Dibatalkan');
+            toast('Transaksi Dibatalkan');
             if (fromQris) closeQris();
             await loadTransactions();
         } else if (s === 'pending') {
-            toast('⏳ Masih menunggu pembayaran');
+            toast('Masih menunggu pembayaran');
             await loadTransactions();
         } else {
             toast('Status: ' + s);
@@ -1327,7 +1327,7 @@ async function manualCheckTxFromDetail(txId, btn) {
             setTimeout(() => openTxDetail(txId), 200);
         }, 500);
     } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '🔄 Cek Transaksi'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Cek Transaksi'; }
     }
 }
 
