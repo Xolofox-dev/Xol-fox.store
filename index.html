@@ -1743,7 +1743,7 @@ function openTxDetail(id) {
     document.getElementById('txdTime').textContent = displayTime;
 
     let statusText = t.status, statusColor = 'var(--warn)';
-    if (t.status === 'Diproses' || t.status === 'Selesai') { statusText = 'Berhasil / Diproses'; statusColor = 'var(--success)'; }
+    if (t.status === 'Diproses' || t.status === 'Selesai') { statusText = 'Berhasil'; statusColor = 'var(--success)'; }
     else if (t.status === 'Dibatalkan') { statusText = 'Dibatalkan'; statusColor = 'var(--danger)'; }
     else if (t.status === 'Expired') { statusText = 'Kadaluarsa'; statusColor = 'var(--warn)'; }
     else if (t.status === 'Gagal') { statusText = 'Gagal'; statusColor = 'var(--danger)'; }
