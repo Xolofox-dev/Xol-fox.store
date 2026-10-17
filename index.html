@@ -678,8 +678,8 @@ window.addEventListener('error', function(e) {
     console.error('Fatal JS Error:', e.message);
 });
 
-const SUPABASE_URL = 'https://cvirbvuporpbmvglbvgn.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_eGTWLoJYLayZIioIz-emuBg_082C2v3f';
+const SUPABASE_URL = 'https://cvirbvuporpbmvgibvgn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_eGTWLojYLAyZ1o1z-enuBg_082CZv3f';
 const PRODUCTION_URL = 'https://ayven.my.id';
 const WA_NUMBER = '6285779126072';
 const WA_REDIRECT_DELAY = 3000;
@@ -1583,7 +1583,7 @@ window.buyProduct = buyProduct;
 /* ============== CANCEL & POLLING ============== */
 async function cancelQris() {
     if (!currentTx) return;
-    if (!confirm('Batalkan pembayaran ini? Stok akan dikembalikan.')) return;
+    if (!confirm('Batalkan pembayaran ini?')) return;
     
     const btn = document.querySelector('.btn-cancel-qris');
     if (btn) { btn.disabled = true; btn.textContent = 'Membatalkan...'; }
@@ -1608,7 +1608,7 @@ async function cancelQris() {
             await safeRestoreStock(currentTx.id, itemsToRestore);
         }
         
-        toast('Pembayaran dibatalkan & stok dikembalikan');
+        toast('Pembayaran dibatalkan');
         closeQris(); 
         loadProducts(); 
         loadTransactions();
@@ -1623,7 +1623,7 @@ async function cancelQris() {
 window.cancelQris = cancelQris;
 
 async function cancelTx(id) {
-    if (!confirm('Batalkan transaksi ini? Stok akan dikembalikan.')) return;
+    if (!confirm('Batalkan transaksi ini?')) return;
     
     const btn = event?.target;
     if (btn) { btn.disabled = true; btn.textContent = '...'; }
@@ -1652,7 +1652,7 @@ async function cancelTx(id) {
             }
         }
         
-        toast('Dibatalkan & stok dikembalikan'); 
+        toast('Dibatalkan'); 
         loadProducts(); 
         loadTransactions();
         
