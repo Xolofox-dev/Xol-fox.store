@@ -1542,7 +1542,7 @@ async function buyProduct(id) {
     try {
         const { data: resOk, error: rpcErr } = await db.rpc('reserve_stock', { p_id: p.id, p_qty: 1 });
         if (rpcErr) throw rpcErr;
-        if (!resOk) throw new Error('Stok habis! Pengguna lain baru saja membeli produk ini.');
+        if (!resOk) throw new Error('Stok habis!');
 
         const { data: { session } } = await db.auth.getSession();
         if (!session) throw new Error('Sesi habis, login ulang');
