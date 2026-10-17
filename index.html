@@ -1575,7 +1575,7 @@ window.buyProduct = buyProduct;
 /* ============== CANCEL & POLLING ============== */
 async function cancelQris() {
     if (!currentTx) return;
-    if (!confirm('Batalkan pembayaran ini? Stok akan dikembalikan.')) return;
+    if (!confirm('Batalkan pembayaran ini?')) return;
     
     const btn = document.querySelector('.btn-cancel-qris');
     if (btn) { btn.disabled = true; btn.textContent = 'Membatalkan...'; }
@@ -1600,7 +1600,7 @@ async function cancelQris() {
             await safeRestoreStock(currentTx.id, itemsToRestore);
         }
         
-        toast('Pembayaran dibatalkan & stok dikembalikan');
+        toast('Pembayaran dibatalkan');
         closeQris(); 
         loadProducts(); 
         loadTransactions();
@@ -1615,7 +1615,7 @@ async function cancelQris() {
 window.cancelQris = cancelQris;
 
 async function cancelTx(id) {
-    if (!confirm('Batalkan transaksi ini? Stok akan dikembalikan.')) return;
+    if (!confirm('Batalkan transaksi?')) return;
     
     const btn = event?.target;
     if (btn) { btn.disabled = true; btn.textContent = '...'; }
@@ -1644,7 +1644,7 @@ async function cancelTx(id) {
             }
         }
         
-        toast('Dibatalkan & stok dikembalikan'); 
+        toast('Dibatalkan); 
         loadProducts(); 
         loadTransactions();
         
